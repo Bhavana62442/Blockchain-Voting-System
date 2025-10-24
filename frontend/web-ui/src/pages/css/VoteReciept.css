@@ -1,0 +1,87 @@
+.vote-receipt-page {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.vote-receipt-page h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.vote-hash-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.vote-hash {
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: #333;
+  background: #f0f0f0;
+  padding: 10px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.vote-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.flag-vote-btn {
+  background-color: #8B0000; /* deep red */
+  color: white;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.flag-vote-btn:hover {
+  background-color: #B22222;
+}
+
+.request-revote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.request-revote select,
+.request-revote button {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+}
+
+.request-revote button {
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.request-revote button:hover {
+  background-color: #333;
+}
+
+.flagged-msg {
+  color: #d9534f;
+  font-weight: bold;
+  margin-top: 10px;
+}

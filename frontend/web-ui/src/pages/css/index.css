@@ -1,0 +1,27 @@
+/* Make body and html take full height */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Main container to push footer down */
+.app-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Content area grows to take available space */
+.content {
+  flex: 1;
+}
+
+/* Footer styling */
+footer {
+  background-color: #00264d;
+  color: white;
+  text-align: center;
+  padding: 15px 0;
+  font-size: 14px;
+}

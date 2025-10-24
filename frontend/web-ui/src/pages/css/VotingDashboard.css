@@ -1,0 +1,159 @@
+/* Layout */
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* full viewport height */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #003366;
+  background-color: #f5f7fa;
+}
+
+
+/* Sticky Header */
+.header {
+  position: sticky;
+  top: 0;
+  background-color: #002147;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 30px;
+  z-index: 1000;
+  border-bottom: 2px solid #001435;
+}
+
+.header-left h1 { margin: 0; font-size: 1.8rem; }
+.header-left p { margin: 3px 0 0; font-size: 0.95rem; }
+.header-right p { margin: 2px 0; font-size: 0.9rem; }
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  width: 100%;        /* full width */
+  padding: 20px 50px; /* slightly more side padding */
+  box-sizing: border-box;
+}
+
+
+/* Voter Info - Sleek lines */
+.voter-info-section h2 { border-bottom: 2px solid #002147; padding-bottom: 5px; }
+.voter-info-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #cce0ff; }
+.voter-info-line span:first-child { font-weight: bold; }
+
+/* Instructions */
+.instructions-section { margin-top: 25px; }
+.instructions-section h2 { border-bottom: 2px solid #002147; padding-bottom: 5px; }
+.instructions-section ul { padding-left: 20px; }
+
+/* Elections */
+.elections-section { margin-top: 25px; }
+.election-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.election-line { padding: 12px 20px; border-left: 4px solid #002147; background-color: #e6f0ff; cursor: pointer; transition: 0.3s; }
+.election-line:hover { background-color: #cce0ff; }
+.selected { border-left: 4px solid #ff9933; background-color: #cce0ff; }
+
+/* Candidates */
+.candidates-section { margin-top: 25px; }
+.candidate-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.candidate-line { display: flex; align-items: center; padding: 10px 15px; border-left: 4px solid #002147; transition: 0.3s; cursor: pointer; background-color: #ffffff; }
+.candidate-line:hover { background-color: #e6f0ff; }
+.candidate-line.selected { border-left: 4px solid #ff9933; }
+.candidate-photo { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
+.candidate-info { display: flex; flex-direction: column; }
+.candidate-name { font-weight: bold; }
+.candidate-party { font-size: 0.9rem; color: #333; }
+
+/* Buttons */
+.vote-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flag-vote-btn,
+.request-revote button {
+  background-color: #ff4d4d;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.flag-vote-btn:hover,
+.request-revote button:hover {
+  background-color: #e60000;
+}
+
+.request-revote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.request-revote select {
+  padding: 5px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+/* Add some spacing and polish */
+.vote-confirmation h2 span {
+  margin-right: 10px;
+  font-size: 1.2em;
+}
+
+.vote-btn, .change-vote-btn {
+  margin-top: 15px; padding: 10px 20px; font-weight: bold; border-radius: 6px; border: none;
+  background-color: #002147; color: white; cursor: pointer; transition: 0.3s;
+}
+.vote-btn:disabled { background-color: #aac4e1; cursor: not-allowed; }
+.vote-btn:hover:enabled, .change-vote-btn:hover { background-color: #001435; }
+
+/* Vote Confirmation */
+.vote-confirmation {
+  margin-top: 20px; padding: 20px; border-left: 4px solid #002147; background-color: #e0f7fa;
+}
+
+/* Sticky Footer */
+.footer {
+  background-color: #002147;
+  color: white;
+  text-align: center;
+  padding: 12px 0;
+  border-top: 2px solid #001435;
+}
+/* Floating Vote Actions */
+.vote-actions-floating {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 250px;
+}
+
+
+/* Buttons inside floating actions */
+.vote-actions-floating button {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.vote-actions-floating .request-revote select {
+  width: 100%;
+  margin: 5px 0;
+}
+
+.vote-actions-floating .request-revote button {
+  width: 100%;
+}
+
