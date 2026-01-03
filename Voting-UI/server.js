@@ -9,7 +9,7 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 
 async function getContract() {
-    const ccpPath = '/home/bhavana/BVS/Blockchain-Voting-System/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/connection-org1.json';
+    const ccpPath = path.resolve(__dirname, '..', 'fabric-samples', 'test-network', 'organizations', 'peerOrganizations', 'org1.example.com', 'connection-org1.json');
     const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // FORCE FIX: Ensure the SDK looks at localhost, not internal docker names
