@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Voting System</title>
+    <style>
+        :root { --primary: #2563eb; --secondary: #1e40af; --success: #059669; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--primary); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h3 { margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        input { width: calc(100% - 20px); padding: 10px; margin: 10px 0; border: 1px solid #cbd5e1; border-radius: 6px; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: var(--secondary); }
+        .btn-refresh { background: var(--success); margin-bottom: 15px; width: auto; padding: 10px 25px; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background-color: #f1f5f9; font-weight: 600; }
+        .hash-cell { font-family: monospace; font-size: 11px; color: #64748b; word-break: break-all; max-width: 150px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🗳️ Blockchain Voting System</h1>
+    <p style="text-align: center;">Secure Voting with Chameleon Hash Redaction</p>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Cast New Vote</h3>
+            <input id="vId" placeholder="Voter ID (e.g. V101)">
+            <input id="cand" placeholder="Candidate Name">
+            <input id="rand" placeholder="Aadhaar / Random Value">
+            <button onclick="castVote()">Submit Vote to Ledger</button>
+        </div>
+
+        <div class="card">
+            <h3>Redact Vote (Admin)</h3>
+            <input id="rvId" placeholder="Existing Voter ID">
+            <input id="rCand" placeholder="New Candidate Name">
+            <input id="rRand" placeholder="New Collision Random">
+            <button style="background: #dc2626;" onclick="redactVote()">Execute Redaction</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Live Blockchain Ledger</h3>
+            <button class="btn-refresh" onclick="loadVotes()">🔄 Refresh Data</button>
+        </div>
+        <div id="ledger-container">
+            <p style="text-align: center; color: #94a3b8;">Click refresh to load votes...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. LOAD VOTES (GET)
+    async function loadVotes() {
+        try {
+            const res = await fetch('/api/votes');
+            const data = await res.json();
+            
+            if (data.length === 0) {
+                document.getElementById('ledger-container').innerHTML = "<p style='text-align:center'>No votes found on the ledger.</p>";
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Voter ID</th>
+                            <th>Candidate</th>
+                            <th>Chameleon Hash</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach(vote => {
+                tableHtml += `
+                    <tr>
+                        <td><strong>${vote.voterId}</strong></td>
+                        <td>${vote.candidate}</td>
+                        <td class="hash-cell">${vote.chameleonHash}</td>
+                        <td>${new Date(vote.timestamp).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `</tbody></table>`;
+            document.getElementById('ledger-container').innerHTML = tableHtml;
+        } catch (err) {
+            alert("Error loading ledger: " + err.message);
+        }
+    }
+
+    // 2. CAST VOTE (POST)
+    async function castVote() {
+        const body = { 
+            voterId: document.getElementById('vId').value, 
+            candidate: document.getElementById('cand').value, 
+            aadhaar: document.getElementById('rand').value 
+        };
+
+        const res = await fetch('/api/votes', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+
+        const result = await res.json();
+        alert(result.message || result.error);
+        loadVotes(); // Refresh list automatically
+    }
+
+    // 3. REDACT VOTE (POST)
+    async function redactVote() {
+        const body = { 
+            voterId: document.getElementById('rvId').value, 
+            newCandidate: document.getElementById('rCand').value, 
+            newRandom: document.getElementById('rRand').value 
+        };
+
+        const res = await fetch('/api/redact', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+
+        const result = await res.json();
+        alert(result.message || result.error);
+        loadVotes(); // Refresh list automatically
+    }
+
+    // Auto-load on page start
+    window.onload = loadVotes;
+</script>
+
+</body>
+</html>
