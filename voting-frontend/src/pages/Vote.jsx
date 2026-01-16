@@ -1,120 +1,108 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const candidates = [
-  {
-    id: "C1",
-    name: "Arjun Rao",
-    party: "Progress Party",
-    region: "South District",
-    agenda: "Education reform, healthcare access"
-  },
-  {
-    id: "C2",
-    name: "Meera Iyer",
-    party: "National Front",
-    region: "South District",
-    agenda: "Economic stability, women empowerment"
-  },
-  {
-    id: "C3",
-    name: "Ravi Singh",
-    party: "People’s Alliance",
-    region: "South District",
-    agenda: "Employment generation, rural development"
-  },
-  {
-    id: "C4",
-    name: "Neha Verma",
-    party: "Unity Party",
-    region: "South District",
-    agenda: "Infrastructure growth, digital governance"
-  },
-  {
-    id: "C5",
-    name: "Karan Malhotra",
-    party: "Democratic Voice",
-    region: "South District",
-    agenda: "Anti-corruption, transparency reforms"
-  }
-];
 
 export default function Vote() {
-  const [selected, setSelected] = useState(null);
   const navigate = useNavigate();
+  const [selected, setSelected] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const confirmVote = async () => {
-    if (!selected) return;
+  const voterId = localStorage.getItem("voterId") || "VOTER123";
+  const aadhaar = localStorage.getItem("aadhaar") || "XXXX-XXXX";
+
+  const candidates = [
+    {
+      id: "Candidate A",
+      name: "Candidate A",
+      party: "National Progressive Party",
+      image: "/images/male.png",
+    },
+    {
+      id: "Candidate B",
+      name: "Candidate B",
+      party: "People’s Democratic Front",
+      image: "/images/female.png",
+    },
+    {
+      id: "Candidate C",
+      name: "Candidate C",
+      party: "United Reform Alliance",
+      image: "/images/male.png",
+    },
+  ];
+
+  async function handleSubmit() {
+    if (!selected) {
+      alert("Please select one candidate.");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
-      await axios.post("http://localhost:3000/api/votes", {
-        voterId: "VOTER123",
-        candidate: selected.name,
-        aadhaar: "XXXX-XXXX-XXXX"
+      const res = await fetch("http://localhost:3000/api/votes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          voterId,
+          candidate: selected,
+          aadhaar,
+        }),
       });
 
-      navigate("/vote-status", { state: { candidate: selected } });
+      if (!res.ok) throw new Error();
+
+      navigate("/vote-status", { state: { voterId } });
     } catch {
-      alert("Vote submission failed (backend not running).");
+      alert("Vote submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
 
   return (
-    <>
-      {/* ===== FULL WIDTH BANNER ===== */}
-      <section className="vote-banner">
-        <div className="vote-banner-text">
-          <h1>GENERAL ASSEMBLY ELECTION, 2026</h1>
-          <p>Official Electronic Voting Portal</p>
-        </div>
-      </section>
+    <div className="gov-page">
+      <div className="vote-container">
+        <h2 className="gov-section-title">Cast Your Vote</h2>
 
-      {/* ===== CONTENT ===== */}
-      <main className="vote-page">
-        <h2 className="vote-title">Cast Your Vote</h2>
+        <p className="gov-instruction">
+          Select <strong>one candidate</strong>. Your vote will be securely
+          recorded and cannot be modified once finalized.
+        </p>
 
-        <div className="candidate-list">
-          {candidates.map((c) => {
-            const isSelected = selected?.id === c.id;
-
-            return (
-              <div
-                key={c.id}
-                className={`candidate-row ${isSelected ? "selected" : ""}`}
-                onClick={() => setSelected(isSelected ? null : c)}
-              >
-                <label className="candidate-main">
-                  <input
-                    type="radio"
-                    checked={isSelected}
-                    readOnly
-                  />
-                  <strong>{c.name}</strong>
-                  <span> — {c.party}</span>
-                </label>
-
-                {isSelected && (
-                  <div className="candidate-details">
-                    <p><strong>Region:</strong> {c.region}</p>
-                    <p><strong>Agenda:</strong> {c.agenda}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="confirm-container">
-          <button
-            className="confirm-btn"
-            disabled={!selected}
-            onClick={confirmVote}
+        {candidates.map((c) => (
+          <div
+            key={c.id}
+            className={`vote-card ${
+              selected === c.id ? "selected" : ""
+            }`}
+            onClick={() => setSelected(c.id)}
           >
-            Confirm Vote
-          </button>
-        </div>
-      </main>
-    </>
+            <img
+              src={c.image}
+              alt={c.name}
+              className="vote-photo"
+            />
+
+            <div className="vote-info">
+              <h4>{c.name}</h4>
+              <p>{c.party}</p>
+            </div>
+          </div>
+        ))}
+
+        <button
+          className="primary-btn vote-submit"
+          disabled={submitting}
+          onClick={handleSubmit}
+        >
+          {submitting ? "Submitting Vote..." : "Confirm & Submit Vote"}
+        </button>
+
+        <p className="gov-text subtle-note">
+          Voting is confidential. This system follows official election
+          procedures.
+        </p>
+      </div>
+    </div>
   );
 }
