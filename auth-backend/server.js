@@ -2,19 +2,9 @@ console.log("Server file loaded");
 
 const express = require("express");
 
-const users = [
-  {
-    phone: "9999999999",
-    aadhaarLast4: "1234",
-    hasVoterId: true
-  },
-  {
-    phone: "8888888888",
-    aadhaarLast4: "5678",
-    hasVoterId: false
-  }
-];
+
 const otpStore = {};
+const { getDB } = require("./db");
 
 const app = express();
 app.use(express.json());
@@ -28,12 +18,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post("/auth/start", (req, res) => {
+app.post("/auth/start", async (req, res) => {
+
   const { phone, aadhaarLast4 } = req.body;
 
-  const user = users.find(
-    u => u.phone === phone && u.aadhaarLast4 === aadhaarLast4
-  );
+ const db = await getDB();
+const user = await db.collection("users").findOne({
+  phone,
+  aadhaarLast4
+});
+
 
   if (!user) {
     return res.status(401).json({ error: "INVALID_DETAILS" });
@@ -49,7 +43,8 @@ console.log(`OTP for ${phone}: ${otp}`);
 res.json({ status: "OTP_SENT" });
 
 });
-app.post("/auth/verify", (req, res) => {
+app.post("/auth/verify", async (req, res) => {
+
   const { phone, otp } = req.body;
 
   const record = otpStore[phone];
@@ -69,9 +64,11 @@ app.post("/auth/verify", (req, res) => {
 
   delete otpStore[phone];
 
-  const user = users.find(u => u.phone === phone);
+  const db = await getDB();
+const user = await db.collection("users").findOne({ phone });
 
-  if (!user.hasVoterId) {
+
+  if (!user.documents || user.documents.voterId !== true){
     return res.json({ allowed: false, reason: "NO_VOTER_ID" });
   }
 
