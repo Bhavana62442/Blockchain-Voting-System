@@ -11,6 +11,8 @@ import AboutElection from "./pages/AboutElection";
 import HowToVote from "./pages/HowToVote";
 import HelpFAQs from "./pages/HelpFAQs";
 import PublicLedger from "./pages/PublicLedger";
+import DigiAuth from "./pages/DigiAuth";
+
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
         <Route path="/how-to-vote" element={<HowToVote />} />
         <Route path="/help-faqs" element={<HelpFAQs />} />
         <Route path="/ledger" element={<PublicLedger />} />
+        <Route path="/auth" element={<DigiAuth />} />
       </Routes>
     </BrowserRouter>
   );

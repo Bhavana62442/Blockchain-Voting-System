@@ -96,7 +96,8 @@ export default function Landing() {
             <button
               className="primary-btn"
               onClick={() =>
-                navigate(resultsPublished ? "/results" : "/login")
+               navigate(resultsPublished ? "/results" : "/auth")
+
               }
             >
               {resultsPublished ? "View Results" : "Cast Your Vote"}
