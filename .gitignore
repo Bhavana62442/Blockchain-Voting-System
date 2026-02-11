@@ -1,0 +1,79 @@
+bin/
+config/
+builders/
+**/organizations/peerOrganizations/
+**/organizations/ordererOrganizations/
+**/vars/
+test-network/channel-artifacts/
+test-network/system-genesis-block/
+
+# --- Node.js Backend ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.pids
+*.seed
+*.pid.lock
+
+
+# --- Go Chaincode ---
+**/chaincode-go/vendor/
+**/chaincode-go/build/
+go.sum
+
+# --- Wallet & Identity (SENSITIVE) ---
+# This contains the private keys your app uses to talk to the ledger
+wallet/
+gateway/
+
+
+# --- OS & IDE Clutter ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Emacs backup files
+*~
+*#
+.#*
+# Vim file artifacts
+.*.sw*
+.DS_Store
+.project
+# omit Go vendor directories
+vendor/
+.vscode
+.gradle
+.idea
+# Dependency directories
+node_modules/
+package-lock.json
+# Ignore Gradle build output directory
+build
+# Ignore Maven build output directory
+target
+
+# Eclipse
+.classpath
+.settings
+
+# installed Fabric binaries etc.
+/bin/
+builders/
+config/
+external-chaincode/
+install-fabric.sh
+
+wallet
+!wallet/.gitkeep
+
+# override the ignore of all config/ folders
+!full-stack-asset-transfer-guide/infrastructure/sample-network/config
+# Ensure your custom scripts and code are NOT ignored
+!fabric-samples/test-network/clean.sh
+!fabric-samples/asset-transfer-basic/chaincode-go/chaincode/smartcontract.go
