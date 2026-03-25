@@ -1,108 +1,129 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const candidates = [
+  {
+    name: "Arjun Rao",
+    party: "Democratic Alliance",
+    photo: "/images/male.png"
+  },
+  {
+    name: "Meera Nair",
+    party: "National Reform Party",
+    photo: "/images/female.png"
+  },
+  {
+    name: "Rakesh Singh",
+    party: "People's Development Front",
+    photo: "/images/male.png"
+  }
+];
+
 export default function Vote() {
+
   const navigate = useNavigate();
-  const [selected, setSelected] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [selected, setSelected] = useState(null);
 
-  const voterId = localStorage.getItem("voterId") || "VOTER123";
-  const aadhaar = localStorage.getItem("aadhaar") || "XXXX-XXXX";
+  const submitVote = () => {
 
-  const candidates = [
-    {
-      id: "Candidate A",
-      name: "Candidate A",
-      party: "National Progressive Party",
-      image: "/images/male.png",
-    },
-    {
-      id: "Candidate B",
-      name: "Candidate B",
-      party: "People’s Democratic Front",
-      image: "/images/female.png",
-    },
-    {
-      id: "Candidate C",
-      name: "Candidate C",
-      party: "United Reform Alliance",
-      image: "/images/male.png",
-    },
-  ];
-
-  async function handleSubmit() {
-    if (!selected) {
-      alert("Please select one candidate.");
+    if (selected === null) {
+      alert("Please select a candidate.");
       return;
     }
 
-    setSubmitting(true);
+    const voteData = {
+  candidate: candidates[selected].name,
+  timestamp: new Date().toLocaleString(),
+  hash: "0x" + Math.random().toString(16).substring(2, 66)
+};
+    localStorage.setItem("voteReceipt", JSON.stringify(voteData));
 
-    try {
-      const res = await fetch("http://localhost:3000/api/votes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          voterId,
-          candidate: selected,
-          aadhaar,
-        }),
-      });
-
-      if (!res.ok) throw new Error();
-
-      navigate("/vote-status", { state: { voterId } });
-    } catch {
-      alert("Vote submission failed. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    navigate("/vote-status");
+  };
 
   return (
-    <div className="gov-page">
-      <div className="vote-container">
-        <h2 className="gov-section-title">Cast Your Vote</h2>
+    <div className="vote-page">
 
-        <p className="gov-instruction">
-          Select <strong>one candidate</strong>. Your vote will be securely
-          recorded and cannot be modified once finalized.
-        </p>
+      <h1 className="page-title">Secure Electronic Voting Portal</h1>
 
-        {candidates.map((c) => (
-          <div
-            key={c.id}
-            className={`vote-card ${
-              selected === c.id ? "selected" : ""
-            }`}
-            onClick={() => setSelected(c.id)}
-          >
-            <img
-              src={c.image}
-              alt={c.name}
-              className="vote-photo"
+      {/* INFO PANELS */}
+      <div className="top-info">
+
+        <div className="info-panel">
+          <h3>Voter Information</h3>
+
+          <div className="info-row">
+            <span>Voter ID</span>
+            <span>******6789</span>
+          </div>
+
+          <div className="info-row">
+            <span>Constituency</span>
+            <span>Bangalore South</span>
+          </div>
+
+          <div className="info-row">
+            <span>Region</span>
+            <span>South District</span>
+          </div>
+        </div>
+
+        <div className="info-panel">
+          <h3>Election Details</h3>
+
+          <div className="info-row">
+            <span>Election</span>
+            <span>Legislative Assembly Election</span>
+          </div>
+
+          <div className="info-row">
+            <span>Voting Window</span>
+            <span>08:00 – 18:00</span>
+          </div>
+
+          <div className="info-row">
+            <span>Election Category</span>
+            <span>Government & State</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* CANDIDATES */}
+      <div className="candidate-section">
+
+        <h2>Select Candidate</h2>
+
+        {candidates.map((c, index) => (
+          <label key={index} className="candidate-row">
+
+            <input
+              type="radio"
+              name="candidate"
+              checked={selected === index}
+              onChange={() => setSelected(index)}
             />
 
-            <div className="vote-info">
-              <h4>{c.name}</h4>
-              <p>{c.party}</p>
+            <img src={c.photo} alt={c.name} />
+
+            <div className="candidate-info">
+              <strong>{c.name}</strong>
+              <span>{c.party}</span>
             </div>
-          </div>
+
+          </label>
         ))}
 
-        <button
-          className="primary-btn vote-submit"
-          disabled={submitting}
-          onClick={handleSubmit}
-        >
-          {submitting ? "Submitting Vote..." : "Confirm & Submit Vote"}
-        </button>
-
-        <p className="gov-text subtle-note">
-          Voting is confidential. This system follows official election
-          procedures.
-        </p>
       </div>
+
+      <button
+        type="button"
+        className="vote-submit-btn"
+        onClick={submitVote}
+      >
+        Submit Vote
+      </button>
+
     </div>
   );
 }

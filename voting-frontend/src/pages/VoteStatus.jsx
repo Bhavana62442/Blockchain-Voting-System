@@ -1,52 +1,108 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import Lottie from "lottie-react";
+import { FiCopy } from "react-icons/fi";
+import checkAnimation from "../Blue check circle.json";
 
-export default function VoteStatus() {
+export default function VoteStatus(){
+
   const navigate = useNavigate();
-  const location = useLocation();
-  const voterId = location.state?.voterId;
+  const [receipt,setReceipt] = useState(null);
+  const [copied,setCopied] = useState(false);
 
-  const [vote, setVote] = useState(null);
+  useEffect(()=>{
 
-  useEffect(() => {
-    if (!voterId) {
-      navigate("/");
-      return;
+    const data = localStorage.getItem("voteReceipt");
+
+    if(data){
+      setReceipt(JSON.parse(data));
     }
 
-    fetch(`http://localhost:3000/api/votes/${voterId}`)
-      .then((res) => res.json())
-      .then((data) => setVote(data))
-      .catch(() => setVote(null));
-  }, [voterId, navigate]);
+  },[]);
 
-  return (
-    <div className="gov-page">
-      <div className="vote-status-box">
-        <h2 className="gov-section-title">Vote Recorded</h2>
+  const copyHash = () => {
 
-        <p className="gov-text">
-          Your vote has been successfully recorded on the blockchain.
+    navigator.clipboard.writeText(receipt.hash);
+
+    setCopied(true);
+
+    setTimeout(()=>{
+      setCopied(false);
+    },2000);
+
+  };
+
+  if(!receipt){
+    return <h2>No vote record found.</h2>;
+  }
+
+  return(
+
+    <div className="status-page">
+
+      <div className="status-card">
+
+        {/* SUCCESS ANIMATION */}
+        <div className="status-animation">
+          <Lottie animationData={checkAnimation} loop />
+        </div>
+
+        <h2>Vote Successfully Recorded</h2>
+
+        <p className="status-message">
+          Your vote has been securely encrypted and recorded on the blockchain ledger.
         </p>
 
-        {vote && (
-          <div className="vote-confirmation">
+        {/* RECEIPT */}
+        <div className="receipt-box">
+
+          <div className="receipt-row">
             <span>Selected Candidate</span>
-            <strong>{vote.candidate}</strong>
+            <span>{receipt.candidate}</span>
           </div>
-        )}
 
-        <p className="vote-status-note">
-          You may close this window or return to the home page.
-        </p>
+          <div className="receipt-row">
+            <span>Timestamp</span>
+            <span>{receipt.timestamp}</span>
+          </div>
 
-        <button
-          className="primary-btn"
-          onClick={() => navigate("/")}
-        >
-          Return to Home
-        </button>
+          <div className="receipt-row">
+            <span>Blockchain Hash</span>
+
+            <div className="hash-copy">
+
+              <span className="hash-text">
+                {receipt.hash}
+              </span>
+
+              <button className="copy-btn" onClick={copyHash}>
+                <FiCopy size={16}/>
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {copied && <p className="copy-msg">Hash copied!</p>}
+
+        {/* ACTION BUTTONS */}
+        <div className="status-buttons">
+
+          <button onClick={()=>navigate("/ledger")}>
+            View Public Ledger
+          </button>
+
+          <button onClick={()=>navigate("/")}>
+            Return Home
+          </button>
+
+        </div>
+
       </div>
+
     </div>
+
   );
 }

@@ -27,146 +27,249 @@ const candidates = [
 ];
 
 export default function Landing() {
+
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [currentBanner, setCurrentBanner] = useState(0);
-  const [resultsPublished, setResultsPublished] = useState(false);
+
+  const [menuOpen,setMenuOpen] = useState(false);
+  const [currentBanner,setCurrentBanner] = useState(0);
+  const [resultsPublished,setResultsPublished] = useState(false);
 
   /* banner rotation */
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
-  /* election status (temporary – backend ready) */
-  useEffect(() => {
-    const status = localStorage.getItem("resultsPublished");
-    setResultsPublished(status === "true");
-  }, []);
+  useEffect(()=>{
 
-  return (
-    <div className="gov-root">
+    const interval=setInterval(()=>{
 
-      {/* SIDE MENU */}
-      <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      setCurrentBanner(prev=>(prev+1)%banners.length);
 
-      {/* TOP BAR */}
-      <div className="gov-topbar">
-        Government of India | Election Commission of India
-      </div>
+    },5000);
 
-      {/* HEADER */}
-      <header className="gov-header">
-        <div className="gov-header-left">
-          <button className="menu-btn" onClick={() => setMenuOpen(true)}>☰</button>
-          <img src="/images/eci-logo.png" alt="ECI Logo" />
-          <div>
-            <h1>Election Commission of India</h1>
-            <span>General Assembly Election – 2026</span>
-          </div>
-        </div>
+    return ()=>clearInterval(interval);
 
-        <nav className="gov-header-nav">
-          <a href="/">Home</a>
-          <a href="/login">Voter Login</a>
-          <a href="/results">Results</a>
-        </nav>
-      </header>
+  },[]);
 
-      {/* HERO / BANNER */}
-      <section className="gov-banner">
-        {banners.map((img, index) => (
-          <div
-            key={index}
-            className={`gov-banner-slide ${index === currentBanner ? "active" : ""}`}
-            style={{ backgroundImage: `url(${img})` }}
-          />
-        ))}
+  /* election status */
 
-        <div className="gov-banner-overlay">
-          <div className="gov-banner-grid">
-            <h2>Official Electronic Voting Portal</h2>
-            <p>
-              Secure, transparent and blockchain-based electronic voting
-              system for the General Assembly Election, 2026.
-            </p>
+  useEffect(()=>{
 
-            <button
-              className="primary-btn"
-              onClick={() =>
-               navigate(resultsPublished ? "/results" : "/auth")
+    const status=localStorage.getItem("resultsPublished");
 
-              }
-            >
-              {resultsPublished ? "View Results" : "Cast Your Vote"}
-            </button>
-          </div>
-        </div>
-      </section>
+    setResultsPublished(status==="true");
 
-      {/* VOTING FLOW */}
-      <section className="gov-info-section">
-        <h3 className="gov-section-title">Voting Process</h3>
+  },[]);
 
-        <div className="gov-info-grid">
-          <div className="gov-info-card">
-            <h4>Step 1</h4>
-            <p>Authenticate using Voter ID, Aadhaar, or DigiLocker.</p>
-          </div>
 
-          <div className="gov-info-card">
-            <h4>Step 2</h4>
-            <p>Select one candidate and submit your vote.</p>
-          </div>
+  return(
 
-          <div className="gov-info-card">
-            <h4>Step 3</h4>
-            <p>Vote is securely recorded on the blockchain.</p>
-          </div>
-        </div>
-      </section>
+  <div className="gov-root">
 
-      {/* CANDIDATE PREVIEW */}
-      <section className="gov-section">
-        <h3>Contestants – South District</h3>
+  {/* SIDE MENU */}
 
-        <div className="candidate-cards">
-          {candidates.map((c, i) => (
-            <div className="candidate-card-official" key={i}>
-              <div className="candidate-photo-circle">
-                <img src={c.img} alt={c.name} />
-              </div>
+  <SideMenu
+  open={menuOpen}
+  onClose={()=>setMenuOpen(false)}
+  />
 
-              <div className="candidate-info">
-                <h4>{c.name}</h4>
-                <p className="party">{c.party}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+  {/* TOP BAR */}
 
-      {/* ABOUT / WHY VOTING */}
-      <section className="gov-section">
-        <h3>About the Voting System</h3>
-        <p>
-          This electronic voting system is an academic prototype inspired
-          by the Election Commission of India. It demonstrates how
-          blockchain technology can be used to ensure transparency,
-          integrity, and auditability of votes while preserving voter
-          anonymity.
-        </p>
-      </section>
+  <div className="gov-topbar">
+  Government of India | Election Commission of India
+  </div>
 
-      {/* FOOTER */}
-      <footer className="gov-footer">
-        © 2026 Election Commission of India  
-        <br />
-        Academic & Research Prototype
-      </footer>
 
-    </div>
+  {/* HEADER */}
+
+  <header className="gov-header">
+
+  <div className="gov-header-left">
+
+  <button
+  className="menu-btn"
+  onClick={()=>setMenuOpen(true)}
+  >
+  ☰
+  </button>
+
+  <img src="/images/eci-logo.png" alt="ECI Logo"/>
+
+  <div>
+  <h1>Election Commission of India</h1>
+  <span>General Assembly Election – 2026</span>
+  </div>
+
+  </div>
+
+
+  <nav className="gov-header-nav">
+
+  <a href="/">Home</a>
+  <a href="/login">Voter Login</a>
+  <a href="/admin-login">Admin Login</a>
+  <a href="/results">Results</a>
+
+  </nav>
+
+  </header>
+
+
+
+  {/* HERO / BANNER */}
+
+  <section className="gov-banner">
+
+  {banners.map((img,index)=>(
+  <div
+  key={index}
+  className={`gov-banner-slide ${index===currentBanner?"active":""}`}
+  style={{backgroundImage:`url(${img})`}}
+  />
+  ))}
+
+  <div className="gov-banner-overlay">
+
+  <div className="gov-banner-grid">
+
+  <h2>Official Electronic Voting Portal</h2>
+
+  <p>
+  Secure, transparent and blockchain-based electronic voting
+  system for the General Assembly Election, 2026.
+  </p>
+
+  <button
+  className="primary-btn"
+  onClick={()=>navigate(resultsPublished?"/results":"/auth")}
+  >
+
+  {resultsPublished?"View Results":"Cast Your Vote"}
+
+  </button>
+
+  </div>
+
+  </div>
+
+  </section>
+
+
+
+  {/* VOTING PROCESS */}
+<section className="gov-info-section">
+
+<h3 className="gov-section-title">
+Voting Process
+</h3>
+
+<div className="vote-process-card">
+
+<div className="vote-steps">
+
+<div className="vote-step">
+<div className="step-circle">1</div>
+<h4>Authenticate</h4>
+<p>Authenticate using DigiLocker to verify your identity.</p>
+</div>
+
+<div className="vote-step">
+<div className="step-circle">2</div>
+<h4>Select Candidate</h4>
+<p>Access the voting page and select one candidate.</p>
+</div>
+
+<div className="vote-step">
+<div className="step-circle">3</div>
+<h4>Submit Vote</h4>
+<p>Submit your vote and it is securely recorded on the blockchain.</p>
+</div>
+
+<div className="vote-step">
+<div className="step-circle">4</div>
+<h4>Save Hash</h4>
+<p>A unique vote hash is generated. Copy or save it as your receipt.</p>
+</div>
+
+<div className="vote-step">
+<div className="step-circle">5</div>
+<h4>Verify Vote</h4>
+<p>Search your vote hash on the Public Ledger. If incorrect you can submit a Vote Redaction Request.</p>
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+  {/* CANDIDATE PREVIEW */}
+
+  <section className="gov-section">
+
+  <h3>Contestants – South District</h3>
+
+  <div className="candidate-cards">
+
+  {candidates.map((c,i)=>(
+
+  <div
+  className="candidate-card-official"
+  key={i}
+  >
+
+  <div className="candidate-photo-circle">
+  <img src={c.img} alt={c.name}/>
+  </div>
+
+  <div className="candidate-info">
+
+  <h4>{c.name}</h4>
+
+  <p className="party">{c.party}</p>
+
+  </div>
+
+  </div>
+
+  ))}
+
+  </div>
+
+  </section>
+
+
+
+  {/* ABOUT */}
+
+  <section className="gov-section">
+
+  <h3>About the Voting System</h3>
+
+  <p>
+  This electronic voting system is an academic prototype inspired
+  by the Election Commission of India. It demonstrates how
+  blockchain technology can be used to ensure transparency,
+  integrity, and auditability of votes while preserving voter
+  anonymity.
+  </p>
+
+  </section>
+
+
+
+  {/* FOOTER */}
+
+  <footer className="gov-footer">
+
+  <br/>
+
+  Academic & Research Prototype
+
+  </footer>
+
+
+  </div>
+
   );
+
 }

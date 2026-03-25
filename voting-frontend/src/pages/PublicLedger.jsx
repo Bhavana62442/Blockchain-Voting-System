@@ -1,102 +1,133 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SideMenu from "../components/SideMenu";
 
-export default function PublicLedger() {
-  const [votes, setVotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function PublicLedger(){
 
-  useEffect(() => {
-    fetchLedger();
-  }, []);
+  const navigate = useNavigate();
 
-  async function fetchLedger() {
-    try {
-      const res = await fetch("http://localhost:3000/api/votes");
-      const data = await res.json();
-      setVotes(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Ledger fetch failed:", err);
-      setVotes([]);
-    } finally {
-      setLoading(false);
+  const [ledger,setLedger] = useState([]);
+  const [search,setSearch] = useState("");
+  const [menuOpen,setMenuOpen] = useState(false);
+
+  const candidates = [
+    "Arjun Rao",
+    "Meera Nair",
+    "Rakesh Singh"
+  ];
+
+  useEffect(()=>{
+
+    let simulatedVotes = [];
+
+    for(let i=1;i<=300;i++){
+
+      simulatedVotes.push({
+        block:i,
+        candidate:candidates[Math.floor(Math.random()*3)],
+        hash:"0x"+Math.random().toString(16).substring(2,66),
+        timestamp:new Date(
+          Date.now()-Math.random()*100000000
+        ).toLocaleString()
+      });
+
     }
-  }
 
-  return (
-    <div className="gov-page">
+    const currentVote = localStorage.getItem("voteReceipt");
 
-      {/* TOP BAR */}
-      <div className="gov-topbar">
-        Government of India | Election Commission of India
+    if(currentVote){
+
+      const vote = JSON.parse(currentVote);
+
+      simulatedVotes.push({
+        block:301,
+        candidate:vote.candidate,
+        hash:vote.hash,
+        timestamp:vote.timestamp
+      });
+
+    }
+
+    simulatedVotes.sort((a,b)=>b.block-a.block);
+
+    setLedger(simulatedVotes);
+
+  },[]);
+
+  const filteredLedger = ledger.filter(entry =>
+    entry.hash.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return(
+
+    <div className="ledger-page">
+
+      {/* Side Menu */}
+      <SideMenu
+        open={menuOpen}
+        onClose={()=>setMenuOpen(false)}
+      />
+
+      {/* Menu Button */}
+      <button
+      className="menu-btn"
+      onClick={()=>setMenuOpen(true)}
+      >
+      ☰
+      </button>
+
+      <h1>Public Voting Ledger</h1>
+
+      <p className="ledger-note">
+      Search your transaction hash to verify that your vote has been recorded.
+      </p>
+
+      <input
+      className="ledger-search"
+      type="text"
+      placeholder="Search by Transaction Hash..."
+      value={search}
+      onChange={(e)=>setSearch(e.target.value)}
+      />
+
+      <div className="ledger-container">
+
+        <table className="ledger-table">
+
+          <thead>
+            <tr>
+              <th>Block</th>
+              <th>Candidate</th>
+              <th>Transaction Hash</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+          {filteredLedger.map((entry,index)=>(
+            <tr key={index}>
+              <td>{entry.block}</td>
+              <td>{entry.candidate}</td>
+              <td className="hash">{entry.hash}</td>
+              <td>{entry.timestamp}</td>
+            </tr>
+          ))}
+
+          </tbody>
+
+        </table>
+
       </div>
 
-      {/* HEADER */}
-      <header className="gov-header">
-        <div className="gov-header-left">
-          <img src="/images/eci-logo.png" alt="ECI" />
-          <div>
-            <h1>Public Election Ledger</h1>
-            <span>Blockchain-backed vote transparency</span>
-          </div>
-        </div>
-      </header>
+      <button
+      className="back-btn"
+      onClick={()=>navigate("/")}
+      >
+      Return Home
+      </button>
 
-      {/* CONTENT */}
-      <main className="gov-section">
-
-        <h2 className="gov-section-title">Anonymized Vote Records</h2>
-
-        <p className="gov-instruction">
-          This ledger displays anonymized blockchain transactions representing
-          votes recorded during the election. No personally identifiable voter
-          information is stored or displayed.
-        </p>
-
-        {/* SUMMARY STRIP */}
-        <div className="ledger-summary">
-          <div>
-            <strong>Total Votes</strong>
-            <span>{loading ? "—" : votes.length}</span>
-          </div>
-          <div>
-            <strong>Ledger Status</strong>
-            <span>{loading ? "—" : "Available"}</span>
-          </div>
-        </div>
-
-        {/* LEDGER LIST */}
-        {loading && <p className="gov-text">Loading public ledger…</p>}
-
-        {!loading && votes.length === 0 && (
-          <p className="gov-text">
-            No vote records are available at this time.
-          </p>
-        )}
-
-        <div className="ledger-list">
-          {votes.map((v, i) => (
-            <div className="ledger-card" key={i}>
-              <div className="ledger-row">
-                <span>Transaction</span>
-                <code>{v.hash ? v.hash.slice(0, 16) + "…" : "—"}</code>
-              </div>
-              <div className="ledger-row">
-                <span>Candidate</span>
-                <strong>{v.candidate || "—"}</strong>
-              </div>
-              <div className="ledger-row">
-                <span>Status</span>
-                <strong className="ledger-status confirmed">Recorded</strong>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </main>
-
-      {/* FOOTER */}
-      <footer className="gov-footer">
-        © 2026 Election Commission of India
-      </footer>
     </div>
+
   );
 }

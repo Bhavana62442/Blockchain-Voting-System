@@ -1,6 +1,7 @@
 export default function HelpFAQs() {
   return (
     <div className="gov-page">
+      
       <div className="gov-topbar">
         Government of India | Election Commission of India
       </div>
@@ -16,49 +17,68 @@ export default function HelpFAQs() {
       </header>
 
       <main className="gov-content">
+
         <h2>Help & FAQs</h2>
 
-        <h3>Is my vote secure?</h3>
-        <p>
-          Yes. Votes are recorded on a blockchain-based ledger using
-          cryptographic hashing techniques to ensure integrity and
-          tamper resistance.
-        </p>
+        <div className="faq-container">
 
-        <h3>Can I change my vote after submission?</h3>
-        <p>
-          A limited grace period is provided immediately after voting.
-          Once the grace period expires, the vote is finalized.
-        </p>
+          <details className="faq-item">
+            <summary>Is my vote secure?</summary>
+            <p>
+              Yes. Votes are recorded on a blockchain-based ledger using
+              cryptographic hashing techniques to ensure integrity and
+              tamper resistance.
+            </p>
+          </details>
 
-        <h3>Is my identity visible to anyone?</h3>
-        <p>
-          No. Voter identities are masked and are not exposed to
-          administrators, audit teams, or the public.
-        </p>
+          <details className="faq-item">
+            <summary>Can I change my vote after submission?</summary>
+            <p>
+              A limited grace period is provided immediately after voting.
+              Once the grace period expires, the vote is finalized.
+            </p>
+          </details>
 
-        <h3>When will election results be published?</h3>
-        <p>
-          Results are published only after verification and official
-          declaration by the election administrator.
-        </p>
+          <details className="faq-item">
+            <summary>Is my identity visible to anyone?</summary>
+            <p>
+              No. Voter identities are masked and are not exposed to
+              administrators, audit teams, or the public.
+            </p>
+          </details>
 
-        <h3>Who can access audit information?</h3>
-        <p>
-          Authorized audit teams can view hashed vote records to verify
-          integrity without accessing voter identities.
-        </p>
+          <details className="faq-item">
+            <summary>When will election results be published?</summary>
+            <p>
+              Results are published only after verification and official
+              declaration by the election administrator.
+            </p>
+          </details>
 
-        <h3>Whom should I contact for issues?</h3>
-        <p>
-          This is an academic prototype. For any technical issues,
-          please contact the system administrator or project team.
-        </p>
+          <details className="faq-item">
+            <summary>Who can access audit information?</summary>
+            <p>
+              Authorized audit teams can view hashed vote records to verify
+              integrity without accessing voter identities.
+            </p>
+          </details>
+
+          <details className="faq-item">
+            <summary>Whom should I contact for issues?</summary>
+            <p>
+              This is an academic prototype. For any technical issues,
+              please contact the system administrator or project team.
+            </p>
+          </details>
+
+        </div>
+
       </main>
 
       <footer className="gov-footer">
         © 2026 Election Commission of India
       </footer>
+
     </div>
   );
 }

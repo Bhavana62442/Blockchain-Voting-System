@@ -10,35 +10,34 @@ export default function DigiAuth() {
   const handleVerify = (e) => {
     e.preventDefault();
 
-    // FRONTEND ONLY – assume backend verification success
     if (mobile.length === 10 && aadhaar.length === 4) {
       setVerified(true);
-      setTimeout(() => navigate("/vote"), 800);
+      setTimeout(() => navigate("/otp-verify"), 800);
     }
   };
 
   return (
     <div className="digi-page">
 
-      {/* TOP GOV BAR */}
+      {/* TOP BAR */}
       <div className="digi-topbar">
-        Government of India
+        Secure Digital Identity Gateway
       </div>
 
       {/* HEADER */}
       <header className="digi-header">
-        <img src="/images/eci-logo.png" alt="ECI" />
+        <img src="/images/digilocker-logo.png" alt="Identity Gateway" />
         <div>
-          <h1>DigiLocker</h1>
-          <span>Document Wallet to Empower Citizens</span>
+          <h1>Digital Identity Verification</h1>
+          <span>Secure authentication required to access the voting portal</span>
         </div>
       </header>
 
       {/* CARD */}
       <div className="digi-card">
-        <h2>Login or Create Account</h2>
+        <h2>Verify Your Identity</h2>
         <p className="digi-sub">
-          Enter your mobile number and Aadhaar verification
+          Enter your mobile number and Aadhaar verification to continue.
         </p>
 
         <form onSubmit={handleVerify}>
@@ -69,20 +68,18 @@ export default function DigiAuth() {
           <button className="digi-btn">
             {verified ? "Verified ✓ Redirecting..." : "Continue"}
           </button>
+
         </form>
 
         <p className="digi-terms">
-          By continuing, I agree to the Terms of Service
+          By continuing, you consent to identity verification for accessing the voting service.
         </p>
 
-        <p className="digi-alt">
-          Facing trouble? <span>Try using Voter ID</span>
-        </p>
       </div>
 
       {/* FOOTER */}
       <footer className="digi-footer">
-        © Government of India · Digital India Initiative
+        Secure Voting System – Academic Research Prototype
       </footer>
 
     </div>

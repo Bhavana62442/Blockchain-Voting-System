@@ -1,27 +1,41 @@
 import { useEffect, useState } from "react";
-import SideMenu from "../components/SideMenu";
+import AdminSideMenu from "../components/AdminSideMenu";
 
-export default function Results(){
+export default function AdminResults(){
 
 const [menuOpen,setMenuOpen] = useState(false);
 
 const [results,setResults] = useState({
-"Arjun Rao":120,
-"Meera Nair":100,
-"Rakesh Singh":81
+"Arjun Rao":0,
+"Meera Nair":0,
+"Rakesh Singh":0
 });
 
-const totalEligible = 500;
+const [published,setPublished] = useState(false);
 
-const published = localStorage.getItem("resultsPublished");
+const role = localStorage.getItem("adminRole");
+
+const totalEligible = 500;
 
 useEffect(()=>{
 
 let votes={
-"Arjun Rao":120,
-"Meera Nair":100,
-"Rakesh Singh":81
+"Arjun Rao":0,
+"Meera Nair":0,
+"Rakesh Singh":0
 };
+
+/* simulate 300 votes */
+
+for(let i=0;i<300;i++){
+
+const r=Math.floor(Math.random()*3);
+
+if(r===0) votes["Arjun Rao"]++;
+if(r===1) votes["Meera Nair"]++;
+if(r===2) votes["Rakesh Singh"]++;
+
+}
 
 /* include real vote */
 
@@ -30,10 +44,7 @@ const vote=localStorage.getItem("voteReceipt");
 if(vote){
 
 const v=JSON.parse(vote);
-
-if(votes[v.candidate] !== undefined){
 votes[v.candidate]++;
-}
 
 }
 
@@ -46,29 +57,28 @@ results["Arjun Rao"] +
 results["Meera Nair"] +
 results["Rakesh Singh"];
 
-const turnout=((totalVotes/totalEligible)*100).toFixed(1);
+const turnout = ((totalVotes/totalEligible)*100).toFixed(1);
 
-const winner = Object.entries(results).reduce((a,b)=>a[1]>b[1]?a:b)[0];
+const publishResults = ()=>{
+
+setPublished(true);
+
+};
 
 return(
 
-<div className="results-page">
+<div className="admin-page">
 
-<button
-className="menu-btn"
-onClick={()=>setMenuOpen(true)}
->
-☰
-</button>
+<button className="menu-btn" onClick={()=>setMenuOpen(true)}>☰</button>
 
-<SideMenu
+<AdminSideMenu
 open={menuOpen}
 onClose={()=>setMenuOpen(false)}
 />
 
-<div className="results-container">
+<div className="admin-container">
 
-<h1>Election Results</h1>
+<h1>Election Results Dashboard</h1>
 
 <div className="results-stats">
 
@@ -89,25 +99,11 @@ onClose={()=>setMenuOpen(false)}
 
 </div>
 
-{published !== "true" ? (
-
-<div className="results-hidden">
-
-<h2>Results Not Yet Published</h2>
-
-<p>
-Election results will be available once officially released by the Election Authority.
-</p>
-
-</div>
-
-) : (
-
-<>
+<div className="results-table">
 
 <h2>Candidate Results</h2>
 
-<table className="results-table">
+<table>
 
 <thead>
 
@@ -139,16 +135,30 @@ Election results will be available once officially released by the Election Auth
 
 </table>
 
-<div className="winner-box">
+</div>
 
-<h3>Declared Winner</h3>
+{/* Only senior can publish */}
 
-<h2>{winner}</h2>
+{role === "senior" && !published && (
 
-<p>has secured the highest number of votes in the constituency.</p>
+<button
+className="publish-btn"
+onClick={publishResults}
+>
+
+Publish Election Results
+
+</button>
+
+)}
+
+{published && (
+
+<div className="publish-success">
+
+Results Published Successfully
 
 </div>
-</>
 
 )}
 

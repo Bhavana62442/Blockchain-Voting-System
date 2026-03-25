@@ -1,67 +1,91 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminLogin() {
-  const navigate = useNavigate();
-  const [adminId, setAdminId] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    // Backend auth will be connected later
-    navigate("/admin");
-  };
+const navigate = useNavigate();
 
-  return (
-    <div className="admin-login-page">
+const [username, setUsername] = useState("");
+const [password, setPassword] = useState("");
+const [error, setError] = useState("");
 
-      <div className="admin-login-card">
+const handleLogin = (e) => {
 
-        {/* HEADER */}
-        <div className="admin-login-header">
-          <img src="/images/eci-logo.png" alt="ECI" />
-          <h1>Election Commission of India</h1>
-          <p>Administrative Access Portal</p>
-        </div>
+e.preventDefault();
 
-        {/* FORM */}
-        <form onSubmit={handleLogin} className="admin-login-form">
+/* Officer Login */
 
-          <h2>Administrator Login</h2>
+if (username === "officer" && password === "officer123") {
 
-          <p className="admin-login-info">
-            Sign in using your authorized administrator credentials.
-          </p>
+localStorage.setItem("adminRole","officer");
 
-          <label>Administrator ID</label>
-          <input
-            type="text"
-            placeholder="Enter Administrator ID"
-            value={adminId}
-            onChange={(e) => setAdminId(e.target.value)}
-            required
-          />
+navigate("/admin");
 
-          <label>Password</label>
-          <input
-            type="password"
-            placeholder="Enter Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+}
 
-          <button type="submit" className="primary-btn">
-            Sign In
-          </button>
-        </form>
+if (username === "senior" && password === "senior123") {
 
-        {/* FOOTER WARNING */}
-        <p className="admin-login-warning">
-          Unauthorized access is prohibited and may be subject to legal action
-          under applicable laws.
-        </p>
-      </div>
-    </div>
-  );
+localStorage.setItem("adminRole","senior");
+
+navigate("/admin");
+
+}
+setError("Invalid credentials. Access denied.");
+
+};
+
+return(
+
+<div className="admin-login-page">
+
+<button
+className="back-home"
+onClick={()=>navigate("/")}>
+← Home
+</button>
+
+<div className="admin-login-card">
+
+<h1>Election Administration Portal</h1>
+
+<p className="admin-subtitle">
+Authorized election personnel only
+</p>
+
+<form onSubmit={handleLogin}>
+
+<label>Username</label>
+
+<input
+type="text"
+placeholder="Enter username"
+value={username}
+onChange={(e) => setUsername(e.target.value)}
+required
+/>
+
+<label>Password</label>
+
+<input
+type="password"
+placeholder="Enter password"
+value={password}
+onChange={(e) => setPassword(e.target.value)}
+required
+/>
+
+{error && <p className="login-error">{error}</p>}
+
+<button className="admin-login-btn">
+Login
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+);
+
 }
