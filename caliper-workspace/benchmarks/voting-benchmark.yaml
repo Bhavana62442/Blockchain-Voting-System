@@ -1,0 +1,88 @@
+test:
+  name: voting-benchmark
+  description: Large-scale evaluation of consortium blockchain voting system
+
+  workers:
+    number: 10
+
+  rounds:
+
+    - label: RegisterVoter_Throughput
+      description: Bulk voter registration throughput test
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 50
+      workload:
+        module: workload/registerVoter.js
+
+    - label: CastVote_Throughput
+      description: Core voting throughput test
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 50
+      workload:
+        module: workload/castVote.js
+
+    - label: TallyVotes_Throughput
+      description: Read query throughput
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 200
+      workload:
+        module: workload/tallyVotes.js
+
+    - label: QueryVoterStatus_Throughput
+      description: Voter status lookup throughput
+      txNumber: 100
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 200
+      workload:
+        module: workload/queryVoterStatus.js
+
+    - label: CastVote_Ramp_10
+      description: Scalability - 10 TPS
+      txNumber: 50
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 10
+      workload:
+        module: workload/castVote.js
+
+    - label: CastVote_Ramp_25
+      description: Scalability - 25 TPS
+      txNumber: 50
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 25
+      workload:
+        module: workload/castVote.js
+
+    - label: CastVote_Ramp_50
+      description: Scalability - 50 TPS
+      txNumber: 50
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 50
+      workload:
+        module: workload/castVote.js
+
+    - label: CastVote_Ramp_100
+      description: Scalability - 100 TPS
+      txNumber: 50
+      rateControl:
+        type: fixed-rate
+        opts:
+          tps: 100
+      workload:
+        module: workload/castVote.js

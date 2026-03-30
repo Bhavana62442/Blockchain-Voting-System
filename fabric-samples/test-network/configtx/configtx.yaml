@@ -1,0 +1,183 @@
+Organizations:
+  - &OrdererOrg
+    Name: ECI
+    ID: ECIMSP
+    MSPDir: ../organizations/ordererOrganizations/eci.election.gov.in/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ECIMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ECIMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ECIMSP.admin')"
+    OrdererEndpoints:
+      - orderer0.eci.election.gov.in:7050
+      - orderer1.eci.election.gov.in:7150
+      - orderer2.eci.election.gov.in:7250
+
+  - &Maharashtra
+    Name: Maharashtra
+    ID: MaharashtraMSP
+    MSPDir: ../organizations/peerOrganizations/maharashtra.election.gov.in/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('MaharashtraMSP.admin','MaharashtraMSP.peer','MaharashtraMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('MaharashtraMSP.admin','MaharashtraMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('MaharashtraMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('MaharashtraMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.maharashtra.election.gov.in
+        Port: 7051
+
+  - &Karnataka
+    Name: Karnataka
+    ID: KarnatakaMSP
+    MSPDir: ../organizations/peerOrganizations/karnataka.election.gov.in/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('KarnatakaMSP.admin','KarnatakaMSP.peer','KarnatakaMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('KarnatakaMSP.admin','KarnatakaMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('KarnatakaMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('KarnatakaMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.karnataka.election.gov.in
+        Port: 8051
+
+  - &TamilNadu
+    Name: TamilNadu
+    ID: TamilNaduMSP
+    MSPDir: ../organizations/peerOrganizations/tamilnadu.election.gov.in/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('TamilNaduMSP.admin','TamilNaduMSP.peer','TamilNaduMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('TamilNaduMSP.admin','TamilNaduMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('TamilNaduMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('TamilNaduMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.tamilnadu.election.gov.in
+        Port: 9051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_5: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer0.eci.election.gov.in:7050
+    - orderer1.eci.election.gov.in:7150
+    - orderer2.eci.election.gov.in:7250
+  EtcdRaft:
+    Consenters:
+      - Host: orderer0.eci.election.gov.in
+        Port: 7050
+        ClientTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer0.eci.election.gov.in/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer0.eci.election.gov.in/tls/server.crt
+      - Host: orderer1.eci.election.gov.in
+        Port: 7150
+        ClientTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer1.eci.election.gov.in/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer1.eci.election.gov.in/tls/server.crt
+      - Host: orderer2.eci.election.gov.in
+        Port: 7250
+        ClientTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 500
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 2 MB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  NationalVotingChannelWithOrderer:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Maharashtra
+        - *Karnataka
+        - *TamilNadu
+      Capabilities: *ApplicationCapabilities

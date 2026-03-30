@@ -1,0 +1,217 @@
+version: '3.7'
+
+networks:
+  voting_net:
+    name: voting_net
+
+services:
+
+  orderer0.eci.election.gov.in:
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=ECIMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer0.eci.election.gov.in/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer0.eci.election.gov.in/tls:/var/hyperledger/orderer/tls
+    ports:
+      - 7050:7050
+      - 7053:7053
+      - 9443:9443
+    networks:
+      - voting_net
+
+  orderer1.eci.election.gov.in:
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7150
+      - ORDERER_GENERAL_LOCALMSPID=ECIMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9444
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7153
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer1.eci.election.gov.in/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer1.eci.election.gov.in/tls:/var/hyperledger/orderer/tls
+    ports:
+      - 7150:7150
+      - 7153:7153
+      - 9444:9444
+    networks:
+      - voting_net
+
+  orderer2.eci.election.gov.in:
+    image: hyperledger/fabric-orderer:latest
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7250
+      - ORDERER_GENERAL_LOCALMSPID=ECIMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9445
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7253
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/tls:/var/hyperledger/orderer/tls
+    ports:
+      - 7250:7250
+      - 7253:7253
+      - 9445:9445
+    networks:
+      - voting_net
+
+  peer0.maharashtra.election.gov.in:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=voting_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.maharashtra.election.gov.in
+      - CORE_PEER_ADDRESS=peer0.maharashtra.election.gov.in:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.maharashtra.election.gov.in:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.maharashtra.election.gov.in:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.maharashtra.election.gov.in:7051
+      - CORE_PEER_LOCALMSPID=MaharashtraMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
+    working_dir: /root
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations/peerOrganizations/maharashtra.election.gov.in/peers/peer0.maharashtra.election.gov.in/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/maharashtra.election.gov.in/peers/peer0.maharashtra.election.gov.in/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 7051:7051
+      - 9446:9446
+    networks:
+      - voting_net
+
+  peer0.karnataka.election.gov.in:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=voting_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.karnataka.election.gov.in
+      - CORE_PEER_ADDRESS=peer0.karnataka.election.gov.in:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.karnataka.election.gov.in:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.karnataka.election.gov.in:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.karnataka.election.gov.in:8051
+      - CORE_PEER_LOCALMSPID=KarnatakaMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9447
+    working_dir: /root
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations/peerOrganizations/karnataka.election.gov.in/peers/peer0.karnataka.election.gov.in/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/karnataka.election.gov.in/peers/peer0.karnataka.election.gov.in/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 8051:8051
+      - 9447:9447
+    networks:
+      - voting_net
+
+  peer0.tamilnadu.election.gov.in:
+    image: hyperledger/fabric-peer:latest
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=voting_net
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.tamilnadu.election.gov.in
+      - CORE_PEER_ADDRESS=peer0.tamilnadu.election.gov.in:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.tamilnadu.election.gov.in:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.tamilnadu.election.gov.in:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.tamilnadu.election.gov.in:9051
+      - CORE_PEER_LOCALMSPID=TamilNaduMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9448
+    working_dir: /root
+    command: peer node start
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations/peerOrganizations/tamilnadu.election.gov.in/peers/peer0.tamilnadu.election.gov.in/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/tamilnadu.election.gov.in/peers/peer0.tamilnadu.election.gov.in/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 9051:9051
+      - 9448:9448
+    networks:
+      - voting_net
