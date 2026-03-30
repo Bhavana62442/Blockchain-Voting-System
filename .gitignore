@@ -77,3 +77,15 @@ wallet
 # Ensure your custom scripts and code are NOT ignored
 !fabric-samples/test-network/clean.sh
 !fabric-samples/asset-transfer-basic/chaincode-go/chaincode/smartcontract.go
+# Ignore all of fabric-samples except our custom files
+fabric-samples/
+!fabric-samples/test-network/chaincode/
+!fabric-samples/test-network/network.sh
+!fabric-samples/test-network/configtx/configtx.yaml
+!fabric-samples/test-network/compose/compose-test-net.yaml
+!fabric-samples/test-network/setOrgEnv.sh
+!fabric-samples/test-network/start.sh
+!fabric-samples/test-network/init.sh
+!fabric-samples/test-network/test_voting_e2e.sh
+fs.tar.gz
+Voting-UI/

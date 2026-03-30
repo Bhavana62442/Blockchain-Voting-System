@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>भारत निर्वाचन — National Blockchain Voting</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --saffron: #FF6720;
+    --saffron-dim: #7a3010;
+    --white: #F5F0E8;
+    --green: #16803C;
+    --green-dim: #0a3d1e;
+    --navy: #0B1A2E;
+    --navy-mid: #142035;
+    --navy-light: #1e2f47;
+    --gold: #C9A84C;
+    --gold-dim: #6b5520;
+    --ash: #8fa3b8;
+    --border: rgba(201,168,76,0.2);
+    --glow-s: rgba(255,103,32,0.15);
+    --glow-g: rgba(22,128,60,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.5;
+  }
+
+  /* ── Header ── */
+  header {
+    position: relative; z-index: 10;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(11,26,46,0.98) 0%, transparent 100%);
+    backdrop-filter: blur(20px);
+    padding: 0 2rem;
+  }
+
+  .header-inner {
+    max-width: 1400px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 0;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 1rem;
+  }
+
+  .logo-ashoka {
+    width: 48px; height: 48px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .logo-ashoka::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: conic-gradient(
+      var(--saffron) 0deg 120deg,
+      var(--white) 120deg 240deg,
+      var(--green) 240deg 360deg
+    );
+    opacity: 0.3;
+    animation: spin 30s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .logo-text h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    color: var(--white);
+  }
+  .logo-text p {
+    font-size: 0.65rem;
+    color: var(--ash);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .header-status {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── Tricolor bar ── */
+  .tricolor-bar {
+    height: 3px;
+    background: linear-gradient(90deg,
+      var(--saffron) 0% 33.33%,
+      var(--white)   33.33% 66.66%,
+      var(--green)   66.66% 100%
+    );
+  }
+
+  /* ── Main layout ── */
+  main {
+    position: relative; z-index: 5;
+    max-width: 1400px; margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* ── Section title ── */
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Stats grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .stat-card:hover { border-color: var(--gold); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+
+  .stat-card.orange::before { background: var(--saffron); }
+  .stat-card.green::before  { background: var(--green); }
+  .stat-card.gold::before   { background: var(--gold); }
+  .stat-card.blue::before   { background: #4A90D9; }
+
+  .stat-label {
+    font-size: 0.65rem; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--ash);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.9rem; font-weight: 500;
+    line-height: 1;
+  }
+
+  .stat-card.orange .stat-value { color: var(--saffron); }
+  .stat-card.green  .stat-value { color: var(--green); }
+  .stat-card.gold   .stat-value { color: var(--gold); }
+  .stat-card.blue   .stat-value { color: #4A90D9; }
+
+  .stat-sub {
+    font-size: 0.65rem; color: var(--ash); margin-top: 0.25rem;
+  }
+
+  /* ── Two-column layout ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  /* ── State turnout bars ── */
+  .state-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .state-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 60px;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .state-name { color: var(--ash); letter-spacing: 0.05em; }
+
+  .bar-track {
+    height: 6px;
+    background: var(--navy-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1.2s cubic-bezier(0.22,1,0.36,1);
+    background: linear-gradient(90deg, var(--saffron), var(--gold));
+  }
+
+  .bar-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  /* ── Results panel ── */
+  .candidate-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .candidate-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .candidate-info { display: flex; flex-direction: column; gap: 0.25rem; }
+  .candidate-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 0.95rem;
+  }
+  .candidate-party { font-size: 0.65rem; color: var(--ash); letter-spacing: 0.1em; }
+
+  .vote-bar-wrap { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .vote-bar-track {
+    height: 8px; background: var(--navy-light);
+    border-radius: 4px; overflow: hidden; width: 220px;
+  }
+
+  .vote-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 1.4s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .vote-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; color: var(--ash);
+  }
+
+  /* ── Action panel ── */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .action-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .action-card h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .action-card p {
+    font-size: 0.68rem; color: var(--ash);
+    margin-bottom: 1rem; line-height: 1.6;
+  }
+
+  .form-group { margin-bottom: 0.75rem; }
+  .form-group label {
+    display: block; font-size: 0.65rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ash); margin-bottom: 0.3rem;
+  }
+
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.6rem 0.75rem;
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--gold);
+  }
+
+  .form-group select option { background: var(--navy-mid); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    border: none; border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--saffron);
+    color: var(--navy);
+    font-weight: 500;
+  }
+  .btn-primary:hover { background: #e85c1a; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+  }
+  .btn-secondary:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed; bottom: 2rem; right: 2rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    z-index: 100;
+  }
+
+  .toast {
+    background: var(--navy-mid);
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.75rem;
+    animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+    max-width: 320px;
+  }
+
+  .toast.error { border-left-color: var(--saffron); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to   { transform: translateX(0);   opacity: 1; }
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(20px); }
+  }
+
+  /* ── Blockchain ledger feed ── */
+  .ledger-feed {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 2rem;
+  }
+
+  .ledger-item {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.7rem;
+    animation: fadeSlide 0.4s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ledger-time { color: var(--ash); min-width: 80px; }
+  .ledger-type {
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    min-width: 80px;
+    text-align: center;
+  }
+  .ledger-type.vote     { background: var(--glow-s); color: var(--saffron); }
+  .ledger-type.register { background: var(--glow-g); color: var(--green); }
+  .ledger-type.system   { background: rgba(74,144,217,0.1); color: #4A90D9; }
+  .ledger-hash { color: var(--gold); }
+  .ledger-detail { color: var(--ash); flex: 1; }
+
+  /* ── Phase badge ── */
+  .phase-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.68rem; letter-spacing: 0.12em;
+    text-transform: uppercase; font-weight: 500;
+    background: rgba(22,128,60,0.15);
+    border: 1px solid rgba(22,128,60,0.3);
+    color: var(--green);
+  }
+
+  /* ── Network topology ── */
+  .network-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+  }
+
+  .node-card {
+    background: var(--navy-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+    font-size: 0.65rem;
+    transition: all 0.2s;
+  }
+
+  .node-card:hover { border-color: var(--gold); }
+  .node-card.active { border-color: rgba(22,128,60,0.5); }
+
+  .node-icon { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .node-name { color: var(--white); font-size: 0.68rem; margin-bottom: 0.1rem; }
+  .node-status { color: var(--green); }
+  .node-status.orderer { color: var(--gold); }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .two-col    { grid-template-columns: 1fr; }
+    .action-grid { grid-template-columns: 1fr; }
+    .network-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="tricolor-bar"></div>
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-ashoka">☸</div>
+      <div class="logo-text">
+        <h1>भारत निर्वाचन — Election of India</h1>
+        <p>Blockchain Voting System · Hyperledger Fabric 2.5 · Raft Consensus</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="pulse-dot"></div>
+      <span id="networkStatus">Connecting...</span>
+      <span class="phase-badge" id="electionPhase">⌛ Loading</span>
+    </div>
+  </div>
+</header>
+<div class="tricolor-bar"></div>
+
+<main>
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card orange">
+      <div class="stat-label">Registered Voters</div>
+      <div class="stat-value" id="statRegistered">—</div>
+      <div class="stat-sub">Chameleon hash identities</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Votes Cast</div>
+      <div class="stat-value" id="statVotes">—</div>
+      <div class="stat-sub">Immutably recorded</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">Turnout</div>
+      <div class="stat-value" id="statTurnout">—</div>
+      <div class="stat-sub">National aggregate</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Peers Online</div>
+      <div class="stat-value" id="statPeers">10/10</div>
+      <div class="stat-sub">Gossip protocol active</div>
+    </div>
+  </div>
+
+  <!-- State turnout + Results -->
+  <div class="two-col">
+    <!-- Left: State Turnout -->
+    <div class="card">
+      <div class="section-title">State Turnout</div>
+      <div class="state-list" id="stateTurnout">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Right: Live Results -->
+    <div class="card">
+      <div class="section-title">Live Results — National Tally</div>
+      <div class="candidate-list" id="candidateResults">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-grid">
+
+    <!-- Register Voter -->
+    <div class="action-card">
+      <h3>Register Voter</h3>
+      <p>State CA–verified. Voter identity stored only as a threshold chameleon hash — the real ID never touches the ledger.</p>
+      <div class="form-group">
+        <label>Voter ID (Aadhaar / EPIC)</label>
+        <input type="text" id="regVoterID" placeholder="e.g. MH123456789"/>
+      </div>
+      <div class="form-group">
+        <label>Salt (random, keep secret)</label>
+        <input type="text" id="regSalt" placeholder="hex salt…"/>
+      </div>
+      <div class="form-group">
+        <label>Constituency</label>
+        <input type="text" id="regConstituency" placeholder="e.g. Mumbai-North"/>
+      </div>
+      <button class="btn btn-primary" onclick="registerVoter()">Register on Blockchain</button>
+    </div>
+
+    <!-- Cast Vote -->
+    <div class="action-card">
+      <h3>Cast Vote</h3>
+      <p>Submit your vote using your chameleon hash ID and randomness parameter. The hash proves identity without revealing it.</p>
+      <div class="form-group">
+        <label>Voter Hash ID</label>
+        <input type="text" id="voteHashID" placeholder="TCH hash…"/>
+      </div>
+      <div class="form-group">
+        <label>Randomness R</label>
+        <input type="text" id="voteRandom" placeholder="hex randomness…"/>
+      </div>
+      <div class="form-group">
+        <label>Candidate</label>
+        <select id="voteCandidate">
+          <option value="">— Select Candidate —</option>
+          <option value="C001">Priya Sharma (INC)</option>
+          <option value="C002">Rajesh Kumar (BJP)</option>
+          <option value="C003">Anjali Menon (AAP)</option>
+          <option value="C004">Arjun Singh (BSP)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Constituency</label>
+        <input type="text" id="voteConstituency" placeholder="e.g. Mumbai-North"/>
+      </div>
+      <button class="btn btn-primary" onclick="castVote()">Submit Vote</button>
+    </div>
+
+  </div>
+
+  <!-- Network topology -->
+  <div class="section-title">Consortium Network — Peer Nodes</div>
+  <div class="ledger-feed" style="padding: 1.25rem; margin-bottom: 1rem;">
+    <div class="network-grid" id="networkTopology"></div>
+  </div>
+
+  <!-- Live ledger feed -->
+  <div class="section-title">Ledger Feed — Recent Transactions</div>
+  <div class="ledger-feed">
+    <div id="ledgerFeed"></div>
+  </div>
+
+</main>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const API = 'http://localhost:3001/api';
+
+// ── Mock data (replace with real API calls in production) ─────────────────────
+const STATES = [
+  { name: 'Maharashtra',   turnout: 72, registered: 98200000 },
+  { name: 'Karnataka',     turnout: 68, registered: 51800000 },
+  { name: 'Tamil Nadu',    turnout: 74, registered: 62000000 },
+  { name: 'Uttar Pradesh', turnout: 61, registered: 149000000 },
+  { name: 'Gujarat',       turnout: 65, registered: 46000000 },
+  { name: 'Rajasthan',     turnout: 67, registered: 49500000 },
+  { name: 'West Bengal',   turnout: 80, registered: 73000000 },
+  { name: 'Telangana',     turnout: 63, registered: 32000000 },
+  { name: 'Punjab',        turnout: 71, registered: 21000000 },
+  { name: 'Kerala',        turnout: 76, registered: 26000000 },
+];
+
+const CANDIDATES = [
+  { id: 'C001', name: 'Priya Sharma',   party: 'INC',  votes: 142300000, color: '#2196F3' },
+  { id: 'C002', name: 'Rajesh Kumar',   party: 'BJP',  votes: 178900000, color: '#FF6720' },
+  { id: 'C003', name: 'Anjali Menon',   party: 'AAP',  votes: 63100000,  color: '#4CAF50' },
+  { id: 'C004', name: 'Arjun Singh',    party: 'BSP',  votes: 28600000,  color: '#9C27B0' },
+];
+
+const NODES = [
+  { name: 'Orderer0', type: 'orderer', icon: '⚙️' },
+  { name: 'Orderer1', type: 'orderer', icon: '⚙️' },
+  { name: 'Orderer2', type: 'orderer', icon: '⚙️' },
+  { name: 'Maharashtra', type: 'peer', icon: '🏛️' },
+  { name: 'Karnataka',   type: 'peer', icon: '🏛️' },
+  { name: 'Tamil Nadu',  type: 'peer', icon: '🏛️' },
+  { name: 'UP',          type: 'peer', icon: '🏛️' },
+  { name: 'Gujarat',     type: 'peer', icon: '🏛️' },
+  { name: 'Rajasthan',   type: 'peer', icon: '🏛️' },
+  { name: 'West Bengal', type: 'peer', icon: '🏛️' },
+  { name: 'Telangana',   type: 'peer', icon: '🏛️' },
+  { name: 'Punjab',      type: 'peer', icon: '🏛️' },
+  { name: 'Kerala',      type: 'peer', icon: '🏛️' },
+];
+
+// ── Render functions ──────────────────────────────────────────────────────────
+function renderStats() {
+  const totalReg = STATES.reduce((s, x) => s + x.registered, 0);
+  const totalVotes = CANDIDATES.reduce((s, x) => s + x.votes, 0);
+  const turnout = ((totalVotes / totalReg) * 100).toFixed(1);
+
+  document.getElementById('statRegistered').textContent = fmtNum(totalReg);
+  document.getElementById('statVotes').textContent = fmtNum(totalVotes);
+  document.getElementById('statTurnout').textContent = turnout + '%';
+}
+
+function renderStateTurnout() {
+  const el = document.getElementById('stateTurnout');
+  el.innerHTML = STATES.map(s => `
+    <div class="state-row">
+      <span class="state-name">${s.name}</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${s.turnout}%"></div>
+      </div>
+      <span class="bar-pct">${s.turnout}%</span>
+    </div>
+  `).join('');
+}
+
+function renderResults() {
+  const max = Math.max(...CANDIDATES.map(c => c.votes));
+  const el = document.getElementById('candidateResults');
+  el.innerHTML = CANDIDATES.map(c => `
+    <div class="candidate-row">
+      <div class="candidate-info">
+        <span class="candidate-name">${c.name}</span>
+        <span class="candidate-party">${c.party}</span>
+      </div>
+      <div class="vote-bar-wrap">
+        <div class="vote-bar-track">
+          <div class="vote-bar-fill" style="width:${(c.votes/max*100).toFixed(1)}%;background:${c.color}"></div>
+        </div>
+        <span class="vote-count">${fmtNum(c.votes)} votes · ${(c.votes/CANDIDATES.reduce((s,x)=>s+x.votes,0)*100).toFixed(1)}%</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTopology() {
+  const el = document.getElementById('networkTopology');
+  el.innerHTML = NODES.map(n => `
+    <div class="node-card active">
+      <div class="node-icon">${n.icon}</div>
+      <div class="node-name">${n.name}</div>
+      <div class="node-status ${n.type}">${n.type === 'orderer' ? 'Raft Leader' : 'Gossip ✓'}</div>
+    </div>
+  `).join('');
+}
+
+const LEDGER_EVENTS = [
+  { type: 'system',   msg: 'Channel nationalvotingchannel created — 10 orgs joined' },
+  { type: 'system',   msg: 'Chaincode voting v1.0 committed — TCH key initialised' },
+  { type: 'register', msg: 'VoterHash 3f9a…d12e registered · Maharashtra constituency' },
+  { type: 'vote',     msg: 'Vote recorded · Hash a1b2…c3d4 → C002 · Karnataka' },
+  { type: 'vote',     msg: 'Vote recorded · Hash 88fa…0091 → C001 · Tamil Nadu' },
+  { type: 'register', msg: 'VoterHash 7c42…b8f1 registered · UP constituency' },
+  { type: 'vote',     msg: 'Vote recorded · Hash e340…aa23 → C003 · Kerala' },
+];
+
+function renderLedger(events) {
+  const el = document.getElementById('ledgerFeed');
+  el.innerHTML = events.map((e, i) => `
+    <div class="ledger-item">
+      <span class="ledger-time">${timeAgo(i)}</span>
+      <span class="ledger-type ${e.type}">${e.type.toUpperCase()}</span>
+      <span class="ledger-hash">#${randHex(6)}</span>
+      <span class="ledger-detail">${e.msg}</span>
+    </div>
+  `).join('');
+}
+
+// ── API calls ─────────────────────────────────────────────────────────────────
+async function registerVoter() {
+  const voterID      = document.getElementById('regVoterID').value.trim();
+  const salt         = document.getElementById('regSalt').value.trim();
+  const constituency = document.getElementById('regConstituency').value.trim();
+  if (!voterID || !salt || !constituency) return toast('All fields required', true);
+
+  try {
+    const r = await fetch(`${API}/voter/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voterID, salt, constituency }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    toast(`✅ Voter registered — Hash: ${data.data?.voterHashID?.slice(0,12)}…`);
+    addLedgerEvent('register', `VoterHash ${data.data?.voterHashID?.slice(0,8)}… registered · ${constituency}`);
+  } catch (e) {
+    toast('Registration failed: ' + e.message, true);
+    // Demo: simulate success in offline mode
+    toast('(Demo mode) Simulating registration on local state…');
+    addLedgerEvent('register', `VoterHash ${randHex(4)}…${randHex(4)} registered · ${constituency}`);
+  }
+}
+
+async function castVote() {
+  const voterHashID  = document.getElementById('voteHashID').value.trim();
+  const randomnessR  = document.getElementById('voteRandom').value.trim();
+  const candidateID  = document.getElementById('voteCandidate').value;
+  const constituency = document.getElementById('voteConstituency').value.trim();
+  if (!voterHashID || !randomnessR || !candidateID || !constituency)
+    return toast('All vote fields required', true);
+
+  try {
+    const r = await fetch(`${API}/vote/cast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voterHashID, randomnessR, candidateID, constituency }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error);
+    toast(`🗳️  Vote cast successfully! Receipt: ${data.voteReceipt?.voteID?.slice(0,10)}…`);
+    addLedgerEvent('vote', `Vote recorded · ${voterHashID.slice(0,8)}… → ${candidateID} · ${constituency}`);
+  } catch (e) {
+    if (e.message?.includes('already voted')) return toast('❌ This voter has already voted', true);
+    toast('Vote failed: ' + e.message, true);
+    // Demo simulation
+    toast('(Demo mode) Vote simulated locally');
+    addLedgerEvent('vote', `Vote recorded · ${voterHashID.slice(0,8)||randHex(8)}… → ${candidateID} · ${constituency}`);
+  }
+}
+
+// ── Live ledger feed additions ─────────────────────────────────────────────────
+let ledgerEvents = [...LEDGER_EVENTS];
+function addLedgerEvent(type, msg) {
+  ledgerEvents.unshift({ type, msg });
+  if (ledgerEvents.length > 20) ledgerEvents.pop();
+  renderLedger(ledgerEvents);
+}
+
+// ── Network status ────────────────────────────────────────────────────────────
+async function checkNetworkStatus() {
+  try {
+    const r = await fetch(`${API}/health`);
+    if (r.ok) {
+      document.getElementById('networkStatus').textContent = 'Network Live';
+    }
+  } catch {
+    document.getElementById('networkStatus').textContent = 'Demo Mode';
+  }
+}
+
+async function checkElectionPhase() {
+  try {
+    const r = await fetch(`${API}/election/status`);
+    if (r.ok) {
+      const data = await r.json();
+      document.getElementById('electionPhase').textContent = '🗳️ ' + data.phase;
+    }
+  } catch {
+    document.getElementById('electionPhase').textContent = '🗳️ VOTING';
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n >= 1e8) return (n/1e7).toFixed(1) + 'Cr';
+  if (n >= 1e5) return (n/1e5).toFixed(1) + 'L';
+  return n.toLocaleString('en-IN');
+}
+
+function randHex(n) {
+  return [...Array(n)].map(()=>Math.floor(Math.random()*16).toString(16)).join('');
+}
+
+function timeAgo(i) {
+  const mins = i * 3 + Math.floor(Math.random()*2);
+  if (mins === 0) return 'just now';
+  return `${mins}m ago`;
+}
+
+function toast(msg, isError = false) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  document.getElementById('toastContainer').prepend(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ── Simulate live updates ─────────────────────────────────────────────────────
+function simulateLiveUpdates() {
+  setInterval(() => {
+    const types = ['vote', 'register'];
+    const states = ['Maharashtra', 'Karnataka', 'TN', 'UP', 'Gujarat', 'Kerala'];
+    const cands = ['C001', 'C002', 'C003', 'C004'];
+    const t = types[Math.floor(Math.random()*2)];
+    const s = states[Math.floor(Math.random()*states.length)];
+    const msg = t === 'vote'
+      ? `Vote recorded · ${randHex(4)}…${randHex(4)} → ${cands[Math.floor(Math.random()*4)]} · ${s}`
+      : `VoterHash ${randHex(4)}…${randHex(4)} registered · ${s}`;
+    addLedgerEvent(t, msg);
+  }, 4000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderStats();
+renderStateTurnout();
+renderResults();
+renderTopology();
+renderLedger(ledgerEvents);
+checkNetworkStatus();
+checkElectionPhase();
+simulateLiveUpdates();
+</script>
+</body>
+</html>

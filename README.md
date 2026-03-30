@@ -1,59 +1,125 @@
-# Blockchain Voting System (BVS)
+# Blockchain Voting System
 
-A decentralized, secure voting application built on Hyperledger Fabric v2.5.
-This system uses a Go-based Smart Contract (Chaincode) for immutable vote storage and a Node.js (Express) backend for the web interface.
+A permissioned blockchain-based voting system built on Hyperledger Fabric with a 3-organisation consortium and Chameleon hashing for ballot privacy.
 
----
+## Prerequisites
 
-## 1. Project Architecture
+Make sure you have the following installed:
+- Node.js (v18+) and npm
+- Go (v1.21+)
+- Docker and Docker Compose
+- Hyperledger Fabric binaries and Docker images
 
-- Blockchain Infrastructure: Hyperledger Fabric Test Network (2 Organizations, 1 Orderer)
-- Network Channel: votingchannel
-- Smart Contract (Chaincode): basic (Go)
-- Application Layer: Node.js (Fabric Gateway SDK)
-- User Interface: HTML / CSS / JavaScript (Bootstrap)
+To install Fabric binaries:
+```bash
+curl -sSL https://bit.ly/2ysbOFE | bash -s
+```
 
----
+## Repository Structure
+```
+.
+├── chaincode-go/        # Go smart contracts (chaincode)
+├── test-network/        # Fabric test network config and scripts
+├── backend/             # Node.js backend (Express + Fabric Gateway SDK)
+└── frontend/            # (if applicable)
+```
 
-## 2. Nuclear Wipe Script (clean.sh)
+## Setup
 
-Hyperledger Fabric persists ledger data inside Docker volumes.
-If the network breaks, identities go out of sync, or you want to reset all votes, use this script to completely wipe and rebuild the network.
+### 1. Clone the repo
+```bash
+git clone <your-repo-url>
+cd <repo-name>
+```
 
-File Location:
-fabric-samples/test-network/clean.sh
-Run this to deploy the channel and the chaincode on it 
+### 2. Environment variables
 
-## 3. Deployment Steps
+The `.env` file is not tracked. Create one in the `backend/` folder:
+```bash
+cp backend/.env.example backend/.env
+```
 
-### Step A: Reset and Initialize the Network
+Then fill in your values:
+```env
+PORT=3000
+CHANNEL_NAME=votingchannel
+CHAINCODE_NAME=voting
+MSP_ID=Org1MSP
+```
 
-    cd ~/BVS/Blockchain-Voting-System/fabric-samples/test-network
-    chmod +x clean.sh
-    ./clean.sh
+### 3. Crypto materials and channel artifacts
 
-### Step B: Sync Application Identities
+These are not tracked in the repo (they contain private keys). Generate them by bringing up the test network:
+```bash
+cd test-network
+./network.sh up createChannel -c votingchannel -ca
+```
 
-The clean.sh script regenerates certificates.
-You must refresh the Node.js wallet to avoid discovery service or malformed identity errors.
+This generates:
+- `organizations/peerOrganizations/` — peer certs and keys
+- `organizations/ordererOrganizations/` — orderer certs and keys  
+- `channel-artifacts/` — genesis block and channel tx files
 
-    cd ~/BVS/Blockchain-Voting-System/Voting-UI
-    rm -rf wallet/
-    node enrollAdmin.js
-    node registerUser.js
+### 4. Deploy the chaincode
+```bash
+./network.sh deployCC -c votingchannel -ccn voting -ccp ../chaincode-go -ccl go
+```
 
-### Step C: Launch the Voting Application
+### 5. Install backend dependencies
+```bash
+cd backend
+npm install
+```
 
-    node server.js
+> `node_modules/` and `package-lock.json` are not tracked — always run `npm install` fresh.
 
-Access the application at:
+### 6. Set up the wallet
 
-    http://localhost:3000
+The `wallet/` folder holds your Fabric identity credentials and is not tracked for security. 
+A `.gitkeep` placeholder is included so the folder exists — populate it by enrolling an admin:
+```bash
+node backend/enrollAdmin.js
+node backend/registerUser.js
+```
 
----
+### 7. Start the backend
+```bash
+npm start
+```
 
-## Notes
+## Running Tests / Benchmarks
 
-- Always delete the wallet after recreating the Fabric network.
-- Channel name and chaincode name must match across Fabric and Node.js configuration files.
-- Docker must be running before executing any Fabric scripts.
+Performance benchmarks use Hyperledger Caliper:
+```bash
+cd caliper-workspace
+npx caliper launch manager \
+  --caliper-workspace . \
+  --caliper-networkconfig networks/fabric-network.yaml \
+  --caliper-benchconfig benchmarks/voting.yaml
+```
+
+## What is NOT in this repo
+
+| Ignored path | Why | How to get it |
+|---|---|---|
+| `wallet/` | Contains private keys | Run `enrollAdmin.js` |
+| `**/organizations/` | Generated crypto material | Run `network.sh up` |
+| `channel-artifacts/` | Generated channel config | Run `network.sh up` |
+| `.env` | Secrets and config | Copy from `.env.example` |
+| `node_modules/` | Dependencies | Run `npm install` |
+| `**/chaincode-go/vendor/` | Go dependencies | Run `go mod vendor` |
+
+## Network Overview
+
+- 3 organisations: Org1, Org2, Org3
+- Endorsement policy: majority (2 of 3)
+- Hashing: Chameleon hashing for ballot privacy
+- Consensus: Raft ordering service
+
+## Troubleshooting
+
+**Peer connection errors** — make sure the network is up (`docker ps` should show peer and orderer containers running).
+
+**Wallet errors** — delete the `wallet/` folder contents and re-run the enroll scripts.
+
+**Chaincode errors** — check `docker logs <peer-container-name>` for detailed chaincode logs.

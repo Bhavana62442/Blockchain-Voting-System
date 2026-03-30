@@ -57,3 +57,11 @@ echo "CORE_PEER_ADDRESS=${CORE_PEER_ADDRESS}"
 echo "CORE_PEER_TLS_ROOTCERT_FILE=${CORE_PEER_TLS_ROOTCERT_FILE}"
 
 echo "CORE_PEER_LOCALMSPID=${CORE_PEER_LOCALMSPID}"
+
+# Add at the bottom of the case statement:
+Karnataka | karnataka)
+  export CORE_PEER_LOCALMSPID=KarnatakaMSP
+  export CORE_PEER_ADDRESS=peer0.karnataka.election.gov.in:8051
+  export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/karnataka.election.gov.in/users/Admin@karnataka.election.gov.in/msp
+  export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/karnataka.election.gov.in/peers/peer0.karnataka.election.gov.in/tls/ca.crt
+  ;;

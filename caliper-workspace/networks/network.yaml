@@ -1,0 +1,19 @@
+name: voting-network
+version: "2.0.0"
+caliper:
+  blockchain: fabric
+channels:
+  - channelName: nationalvotingchannel
+    contracts:
+      - id: voting
+organizations:
+  - mspid: KarnatakaMSP
+    identities:
+      certificates:
+        - name: Admin
+          clientPrivateKey:
+            path: /home/bhavana/Blockchain-Voting-System/fabric-samples/test-network/compose/organizations/peerOrganizations/karnataka.election.gov.in/users/Admin@karnataka.election.gov.in/msp/keystore/priv_sk
+          clientSignedCert:
+            path: /home/bhavana/Blockchain-Voting-System/fabric-samples/test-network/compose/organizations/peerOrganizations/karnataka.election.gov.in/users/Admin@karnataka.election.gov.in/msp/signcerts/Admin@karnataka.election.gov.in-cert.pem
+    connectionProfile:
+      path: ./networks/connection-karnataka.yaml

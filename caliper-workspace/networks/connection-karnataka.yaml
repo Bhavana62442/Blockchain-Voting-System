@@ -1,0 +1,51 @@
+name: karnataka-connection
+version: "1.0"
+
+client:
+  organization: KarnatakaMSP
+  connection:
+    timeout:
+      peer:
+        endorser: "300"
+      orderer: "300"
+
+contracts:
+  - id: voting
+    version: "3.0"
+
+organizations:
+  KarnatakaMSP:
+    mspid: KarnatakaMSP
+    peers:
+      - peer0.karnataka.election.gov.in
+    orderers:
+      - orderer0.eci.election.gov.in
+
+peers:
+  peer0.karnataka.election.gov.in:
+    url: grpcs://localhost:8051
+    eventUrl: grpcs://localhost:8053
+    tlsCACerts:
+      path: /home/bhavana/Blockchain-Voting-System/fabric-samples/test-network/compose/organizations/peerOrganizations/karnataka.election.gov.in/tlsca/tlsca.karnataka.election.gov.in-cert.pem
+    grpcOptions:
+      ssl-target-name-override: peer0.karnataka.election.gov.in
+      hostnameOverride: peer0.karnataka.election.gov.in
+
+orderers:
+  orderer0.eci.election.gov.in:
+    url: grpcs://localhost:7050
+    tlsCACerts:
+      path: /home/bhavana/Blockchain-Voting-System/fabric-samples/organizations/ordererOrganizations/eci.election.gov.in/tlsca/tlsca.eci.election.gov.in-cert.pem
+    grpcOptions:
+      ssl-target-name-override: orderer0.eci.election.gov.in
+
+channels:
+  nationalvotingchannel:
+    orderers:
+      - orderer0.eci.election.gov.in
+    peers:
+      peer0.karnataka.election.gov.in:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
