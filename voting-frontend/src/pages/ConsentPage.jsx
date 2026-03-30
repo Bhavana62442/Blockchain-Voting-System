@@ -7,7 +7,79 @@ export default function ConsentPage() {
 
   const [aadhaar, setAadhaar] = useState(true);
   const [voterId, setVoterId] = useState(true);
-  const [dl, setDl] = useState(false);
+  const [dl,      setDl]      = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState("");
+
+  const handleAllow = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const phone = localStorage.getItem("authPhone");
+      if (!phone) {
+        setError("Session expired. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      // ── BLIND SIGNATURE ─────────────────────────────────────
+      const blindingFactor = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const encoder        = new TextEncoder();
+      const dataBuffer     = encoder.encode(phone + Date.now().toString() + blindingFactor);
+      const hashBuffer     = await crypto.subtle.digest("SHA-256", dataBuffer);
+      const blindedHash    = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0")).join("");
+
+      // ── GET TOKEN FROM MSP (port 8080) ──────────────────────
+      const mspRes = await fetch("http://localhost:8080/issue-token", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ phone, blinded: blindedHash })
+      });
+
+      if (!mspRes.ok) {
+        const errText = await mspRes.text();
+        throw new Error("MSP error: " + errText);
+      }
+
+      const { token, signature } = await mspRes.json();
+
+      // ── REGISTER ON BLOCKCHAIN (her API port 3001) ──────────
+      // Skipped gracefully if her network not running yet
+      try {
+        const regRes = await fetch("http://localhost:3001/api/voter/register", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            voterID:      token,
+            salt:         signature,
+            constituency: "Karnataka"
+          })
+        });
+        if (!regRes.ok) {
+          const txt = await regRes.text();
+          if (!txt.includes("already registered")) {
+            console.warn("Blockchain register warning:", txt);
+          }
+        }
+      } catch {
+        console.warn("Blockchain API not running yet — skipping register");
+      }
+
+      // ── STORE FOR VOTE PAGE ─────────────────────────────────
+      localStorage.setItem("votingToken",    token);
+      localStorage.setItem("signature",      signature);
+      localStorage.setItem("blindingFactor", blindingFactor);
+
+      navigate("/vote");
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="digi-page">
@@ -22,132 +94,111 @@ export default function ConsentPage() {
       </header>
 
       {/* CONSENT BOX */}
-      <div
-        style={{
-          maxWidth: "700px",
-          margin: "40px auto",
-          background: "#ffffff",
-          padding: "30px",
-          borderRadius: "12px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
-        }}
-      >
+      <div style={{
+        maxWidth: "700px",
+        margin: "40px auto",
+        background: "#ffffff",
+        padding: "30px",
+        borderRadius: "12px",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
+      }}>
 
-        <p style={{marginBottom:"20px",fontSize:"15px"}}>
+        <p style={{ marginBottom: "20px", fontSize: "15px" }}>
           Please provide your consent to share the following with
           <strong> Secure Voting Portal</strong>:
         </p>
 
-        {/* DOCUMENT SECTION */}
-        <div style={{borderTop:"1px solid #eee",paddingTop:"20px"}}>
+        {/* ISSUED DOCUMENTS */}
+        <div style={{ borderTop: "1px solid #eee", paddingTop: "20px" }}>
+          <h3 style={{ marginBottom: "12px" }}>Issued Documents</h3>
 
-          <h3 style={{marginBottom:"12px"}}>Issued Documents</h3>
-
-          <label style={{display:"block",marginBottom:"8px"}}>
-            <input
-              type="checkbox"
-              checked={aadhaar}
-              onChange={()=>setAadhaar(!aadhaar)}
-            />{" "}
+          <label style={{ display: "block", marginBottom: "8px" }}>
+            <input type="checkbox" checked={aadhaar} onChange={() => setAadhaar(!aadhaar)} />{" "}
             Aadhaar Verification (XXXX 3325)
           </label>
 
-          <label style={{display:"block",marginBottom:"8px"}}>
-            <input
-              type="checkbox"
-              checked={voterId}
-              onChange={()=>setVoterId(!voterId)}
-            />{" "}
+          <label style={{ display: "block", marginBottom: "8px" }}>
+            <input type="checkbox" checked={voterId} onChange={() => setVoterId(!voterId)} />{" "}
             Voter ID Authentication (XXXX 6789)
           </label>
 
-          <label style={{display:"block"}}>
-            <input
-              type="checkbox"
-              checked={dl}
-              onChange={()=>setDl(!dl)}
-            />{" "}
+          <label style={{ display: "block" }}>
+            <input type="checkbox" checked={dl} onChange={() => setDl(!dl)} />{" "}
             Driving License (can be accessed)
           </label>
-
         </div>
 
-        {/* PROFILE SECTION */}
-        <div style={{marginTop:"25px",borderTop:"1px solid #eee",paddingTop:"20px"}}>
-
+        {/* PROFILE */}
+        <div style={{ marginTop: "25px", borderTop: "1px solid #eee", paddingTop: "20px" }}>
           <h3>Profile Information</h3>
-
-          <p style={{marginTop:"6px",color:"#555"}}>
-            Name, Date of Birth, Gender
-          </p>
-
+          <p style={{ marginTop: "6px", color: "#555" }}>Name, Date of Birth, Gender</p>
         </div>
 
         {/* VALIDITY */}
-        <div style={{marginTop:"25px",borderTop:"1px solid #eee",paddingTop:"20px"}}>
-
+        <div style={{ marginTop: "25px", borderTop: "1px solid #eee", paddingTop: "20px" }}>
           <h3>Consent Validity</h3>
-
-          <p style={{color:"#555"}}>
-            Valid for 30 days from today
-          </p>
-
+          <p style={{ color: "#555" }}>Valid for 30 days from today</p>
         </div>
 
         {/* PURPOSE */}
-        <div style={{marginTop:"25px",borderTop:"1px solid #eee",paddingTop:"20px"}}>
-
+        <div style={{ marginTop: "25px", borderTop: "1px solid #eee", paddingTop: "20px" }}>
           <h3>Purpose</h3>
-
-          <p style={{color:"#555"}}>
-            Identity verification for Secure Electronic Voting System
-          </p>
-
+          <p style={{ color: "#555" }}>Identity verification for Secure Electronic Voting System</p>
         </div>
 
         {/* CONSENT TEXT */}
-        <p style={{marginTop:"30px",fontSize:"14px",color:"#555"}}>
+        <p style={{ marginTop: "30px", fontSize: "14px", color: "#555" }}>
           By clicking <strong>Allow</strong>, you consent to share the selected
           information with the voting portal for identity verification.
         </p>
 
-        {/* BUTTONS */}
-        <div
-          style={{
-            display:"flex",
-            justifyContent:"space-between",
-            marginTop:"25px"
-          }}
-        >
+        {/* ERROR */}
+        {error && (
+          <p style={{ color: "red", fontSize: "13px", marginTop: "10px" }}>{error}</p>
+        )}
+
+        {/* BUTTONS — properly aligned */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "25px",
+          gap: "12px"
+        }}>
 
           <button
             style={{
-              padding:"12px 28px",
-              border:"1px solid #4a64f0",
-              borderRadius:"8px",
-              background:"#fff",
-              color:"#4a64f0",
-              fontWeight:"600",
-              cursor:"pointer"
+              padding: "12px 28px",
+              border: "1px solid #4a64f0",
+              borderRadius: "8px",
+              background: "#ffffff",
+              color: "#4a64f0",
+              fontWeight: "600",
+              cursor: "pointer",
+              fontSize: "15px",
+              flex: "0 0 auto"
             }}
-            onClick={()=>navigate("/")}
+            onClick={() => navigate("/")}
           >
             Deny
           </button>
 
           <button
             style={{
-              padding:"12px 28px",
-              border:"none",
-              borderRadius:"8px",
-              background:"#4a64f0",
-              color:"#fff",
-              fontWeight:"600",
-              cursor:"pointer"
+              padding: "12px 28px",
+              border: "none",
+              borderRadius: "8px",
+              background: loading ? "#a0a0a0" : "#4a64f0",
+              color: "#ffffff",
+              fontWeight: "600",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "15px",
+              flex: "0 0 auto"
             }}
-            onClick={()=>navigate("/vote")}
+            onClick={handleAllow}
+            disabled={loading}
           >
-            Allow
+            {loading ? "Processing..." : "Allow"}
           </button>
 
         </div>

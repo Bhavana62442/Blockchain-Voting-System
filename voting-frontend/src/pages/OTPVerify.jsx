@@ -4,22 +4,55 @@ import { useNavigate } from "react-router-dom";
 export default function OTPVerify() {
 
   const navigate = useNavigate();
-  const [otp, setOtp] = useState("");
+  const [otp,       setOtp]       = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [error,     setError]     = useState("");
 
-  const handleSubmit = (e) => {
+  // Get the real phone number from DigiAuth page
+  const phone = localStorage.getItem("phone") || "";
+  // Show last 4 digits only e.g. ****5243
+  const maskedPhone = phone.length >= 4
+    ? "****" + phone.slice(-4)
+    : "****";
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (otp.length !== 6) {
       alert("Please enter the 6-digit OTP.");
       return;
     }
 
-    setVerifying(true);
+    try {
+      setVerifying(true);
 
-    setTimeout(() => {
+      // Verify OTP with auth-backend (port 3000)
+      const res  = await fetch("http://localhost:3000/auth/verify", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ phone, otp })
+      });
+      const data = await res.json();
+
+      if (!data.allowed) {
+        const msg =
+          data.error === "OTP_EXPIRED"  ? "OTP has expired. Go back and try again." :
+          data.error === "INVALID_OTP"  ? "Incorrect OTP. Please try again." :
+          data.reason === "NO_VOTER_ID" ? "No Voter ID found in DigiLocker." :
+          "Verification failed. Please try again.";
+        setError(msg);
+        setVerifying(false);
+        return;
+      }
+
+      localStorage.setItem("authPhone", phone);
       navigate("/consent");
-    }, 900);
+
+    } catch {
+      setError("Cannot connect to auth server. Is it running on port 3000?");
+      setVerifying(false);
+    }
   };
 
   return (
@@ -48,7 +81,7 @@ export default function OTPVerify() {
           An OTP has been sent to your registered mobile number.
         </p>
 
-        {/* OTP INFO */}
+        {/* OTP INFO — shows real masked phone number */}
         <div
           style={{
             background: "#f3f4f6",
@@ -58,8 +91,8 @@ export default function OTPVerify() {
             marginBottom: "20px"
           }}
         >
-          OTP sent to mobile ending in <strong>****5243</strong><br/>
-          Valid for <strong>10 minutes</strong>
+          OTP sent to mobile ending in <strong>{maskedPhone}</strong><br />
+          Valid for <strong>2 minutes</strong>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -71,13 +104,17 @@ export default function OTPVerify() {
             maxLength="6"
             placeholder="Enter 6 digit OTP"
             value={otp}
-            onChange={(e) =>
-              setOtp(e.target.value.replace(/\D/g, ""))
-            }
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
             required
           />
 
-          <button className="digi-btn">
+          {error && (
+            <p style={{ color: "red", fontSize: "13px", marginTop: "8px" }}>
+              {error}
+            </p>
+          )}
+
+          <button className="digi-btn" disabled={verifying}>
             {verifying ? "Verifying..." : "Continue"}
           </button>
 

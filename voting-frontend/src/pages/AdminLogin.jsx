@@ -3,89 +3,81 @@ import { useNavigate } from "react-router-dom";
 
 export default function AdminLogin() {
 
-const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error,    setError]    = useState("");
 
-const [username, setUsername] = useState("");
-const [password, setPassword] = useState("");
-const [error, setError] = useState("");
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setError("");
 
-const handleLogin = (e) => {
+    // Officer — can access dashboard, ledger, redactions
+    if (username === "officer" && password === "officer123") {
+      localStorage.setItem("adminRole", "officer");
+      navigate("/admin");
+      return; // ← this was missing — caused error to always show
+    }
 
-e.preventDefault();
+    // Senior officer — can access everything including senior redactions
+    if (username === "senior" && password === "senior123") {
+      localStorage.setItem("adminRole", "senior");
+      navigate("/admin");
+      return; // ← this was missing
+    }
 
-/* Officer Login */
+    // Neither matched
+    setError("Invalid credentials. Access denied.");
+  };
 
-if (username === "officer" && password === "officer123") {
+  return (
+    <div className="admin-login-page">
 
-localStorage.setItem("adminRole","officer");
+      <button className="back-home" onClick={() => navigate("/")}>
+        ← Home
+      </button>
 
-navigate("/admin");
+      <div className="admin-login-card">
 
-}
+        <h1>Election Administration Portal</h1>
 
-if (username === "senior" && password === "senior123") {
+        <p className="admin-subtitle">
+          Authorized election personnel only
+        </p>
 
-localStorage.setItem("adminRole","senior");
+        <form onSubmit={handleLogin}>
 
-navigate("/admin");
+          <label>Username</label>
+          <input
+            type="text"
+            placeholder="Enter username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
 
-}
-setError("Invalid credentials. Access denied.");
+          <label>Password</label>
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-};
+          {error && <p className="login-error">{error}</p>}
 
-return(
+          <button className="admin-login-btn">Login</button>
 
-<div className="admin-login-page">
+        </form>
 
-<button
-className="back-home"
-onClick={()=>navigate("/")}>
-← Home
-</button>
+        <div style={{ marginTop: "20px", fontSize: "12px", color: "#999", textAlign: "center" }}>
+          <p>Officer access: dashboard, ledger, redactions</p>
+          <p>Senior access: all pages + results control</p>
+        </div>
 
-<div className="admin-login-card">
+      </div>
 
-<h1>Election Administration Portal</h1>
-
-<p className="admin-subtitle">
-Authorized election personnel only
-</p>
-
-<form onSubmit={handleLogin}>
-
-<label>Username</label>
-
-<input
-type="text"
-placeholder="Enter username"
-value={username}
-onChange={(e) => setUsername(e.target.value)}
-required
-/>
-
-<label>Password</label>
-
-<input
-type="password"
-placeholder="Enter password"
-value={password}
-onChange={(e) => setPassword(e.target.value)}
-required
-/>
-
-{error && <p className="login-error">{error}</p>}
-
-<button className="admin-login-btn">
-Login
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }

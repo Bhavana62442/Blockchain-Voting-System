@@ -1,0 +1,14 @@
+{
+  "name": "auth-backend",
+  "version": "1.0.0",
+  "description": "DigiLocker simulation + OTP auth backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  }
+}

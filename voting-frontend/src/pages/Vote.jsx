@@ -1,44 +1,95 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const candidates = [
-  {
-    name: "Arjun Rao",
-    party: "Democratic Alliance",
-    photo: "/images/male.png"
-  },
-  {
-    name: "Meera Nair",
-    party: "National Reform Party",
-    photo: "/images/female.png"
-  },
-  {
-    name: "Rakesh Singh",
-    party: "People's Development Front",
-    photo: "/images/male.png"
-  }
+  { id: "CANDIDATE_A", name: "Arjun Rao",    party: "Democratic Alliance",        photo: "/images/male.png"   },
+  { id: "CANDIDATE_B", name: "Meera Nair",   party: "National Reform Party",      photo: "/images/female.png" },
+  { id: "CANDIDATE_C", name: "Rakesh Singh", party: "People's Development Front", photo: "/images/male.png"   }
 ];
 
 export default function Vote() {
 
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const [selected, setSelected] = useState(null);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
 
-  const submitVote = () => {
+  // Real phone from login — show last 4 digits only
+  const phone         = localStorage.getItem("authPhone") || "";
+  const maskedVoterID = phone.length >= 4 ? "XXXX-XXXX-" + phone.slice(-4) : "XXXX-XXXX-XXXX";
 
+  // Token guard
+  useEffect(() => {
+    if (!localStorage.getItem("votingToken")) {
+      navigate("/auth");
+    }
+  }, [navigate]);
+
+  const submitVote = async () => {
     if (selected === null) {
-      alert("Please select a candidate.");
+      alert("Please select a candidate before submitting.");
       return;
     }
 
-    const voteData = {
-  candidate: candidates[selected].name,
-  timestamp: new Date().toLocaleString(),
-  hash: "0x" + Math.random().toString(16).substring(2, 66)
-};
-    localStorage.setItem("voteReceipt", JSON.stringify(voteData));
+    setError("");
+    setLoading(true);
 
-    navigate("/vote-status");
+    try {
+      const token       = localStorage.getItem("votingToken");
+      const randomnessR = localStorage.getItem("signature");
+      const candidateID = candidates[selected].id;
+
+      // Call her Fabric Gateway API → CastVote chaincode
+      const res = await fetch("http://localhost:3001/api/vote/cast", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          voterHashID:  token,
+          randomnessR,
+          candidateID,
+          constituency: "Karnataka"
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          throw new Error("Your vote has already been recorded on the blockchain.");
+        }
+        throw new Error(data.error || "Vote submission failed.");
+      }
+
+      localStorage.setItem("voteReceipt", JSON.stringify({
+        candidate:  candidates[selected].name,
+        party:      candidates[selected].party,
+        timestamp:  new Date().toLocaleString(),
+        txHash:     data.voteReceipt?.voteID || ("0x" + Math.random().toString(16).substring(2, 66))
+      }));
+
+      localStorage.removeItem("votingToken");
+      localStorage.removeItem("signature");
+      localStorage.removeItem("blindingFactor");
+
+      navigate("/vote-status");
+
+    } catch (err) {
+      // Blockchain not connected yet — allow demo flow
+      if (err.message.includes("fetch") || err.message.includes("NetworkError") || err.message.includes("Failed to fetch")) {
+        localStorage.setItem("voteReceipt", JSON.stringify({
+          candidate:  candidates[selected].name,
+          party:      candidates[selected].party,
+          timestamp:  new Date().toLocaleString(),
+          txHash:     "0x" + Math.random().toString(16).substring(2, 66)
+        }));
+        localStorage.removeItem("votingToken");
+        localStorage.removeItem("signature");
+        navigate("/vote-status");
+        return;
+      }
+      setError(err.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,7 +105,7 @@ export default function Vote() {
 
           <div className="info-row">
             <span>Voter ID</span>
-            <span>******6789</span>
+            <span>{maskedVoterID}</span>
           </div>
 
           <div className="info-row">
@@ -116,12 +167,20 @@ export default function Vote() {
 
       </div>
 
+      {error && (
+        <p style={{ color: "red", textAlign: "center", margin: "10px auto", maxWidth: "700px" }}>
+          {error}
+        </p>
+      )}
+
       <button
         type="button"
         className="vote-submit-btn"
         onClick={submitVote}
+        disabled={loading}
+        style={{ opacity: loading ? 0.6 : 1 }}
       >
-        Submit Vote
+        {loading ? "Submitting..." : "Submit Vote"}
       </button>
 
     </div>
