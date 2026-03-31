@@ -8,34 +8,47 @@ class CastVoteWorkload extends WorkloadModuleBase {
     constructor() {
         super();
         this.voterPool = [];
+        this.poolIndex = 0;
     }
 
     async initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext) {
         await super.initializeWorkloadModule(workerIndex, totalWorkers, roundIndex, roundArguments, sutAdapter, sutContext);
 
-        // Pre-register a pool of voters for this worker
-        console.log(`Worker ${workerIndex}: pre-registering voter pool...`);
-        for (let i = 0; i < 25; i++) {
-            const voterHashID = '00' + crypto.randomBytes(30).toString('hex');
-            const randomnessR  = '00' + crypto.randomBytes(30).toString('hex');
-            try {
-                await this.sutAdapter.sendRequests({
-                    contractId: 'voting',
-                    contractFunction: 'RegisterVoter',
-                    contractArguments: [voterHashID, randomnessR, 'KarnatakaMSP'],
-                    timeout: 30
-                });
-                this.voterPool.push(voterHashID);
-            } catch (err) {
-                // skip duplicates
+        const poolSize = roundArguments.poolSize || 500;
+        const batchSize = roundArguments.batchSize || 20;
+
+        console.log(`Worker ${workerIndex}: registering ${poolSize} voters...`);
+
+        for (let i = 0; i < poolSize; i += batchSize) {
+            const batch = [];
+
+            for (let j = 0; j < batchSize && (i + j) < poolSize; j++) {
+                const voterHashID = `${workerIndex}${crypto.randomBytes(28).toString('hex')}`;
+                const randomnessR  = crypto.randomBytes(32).toString('hex');
+                batch.push({ voterHashID, randomnessR });
             }
+
+            await Promise.allSettled(
+                batch.map(({ voterHashID, randomnessR }) =>
+                    this.sutAdapter.sendRequests({
+                        contractId: 'voting',
+                        contractFunction: 'RegisterVoter',
+                        contractArguments: [voterHashID, randomnessR, 'KarnatakaMSP'],
+                        timeout: 30
+                    }).then(() => this.voterPool.push(voterHashID))
+                )
+            );
         }
+
         console.log(`Worker ${workerIndex}: pool size = ${this.voterPool.length}`);
     }
 
     async submitTransaction() {
         if (this.voterPool.length === 0) return;
-        const voterHashID = this.voterPool.pop();
+
+        const voterHashID = this.voterPool[this.poolIndex % this.voterPool.length];
+        this.poolIndex++;
+
         const candidate = CANDIDATES[Math.floor(Math.random() * CANDIDATES.length)];
 
         await this.sutAdapter.sendRequests({
@@ -44,6 +57,11 @@ class CastVoteWorkload extends WorkloadModuleBase {
             contractArguments: [voterHashID, candidate],
             timeout: 30
         });
+    }
+
+    async cleanupWorkloadModule() {
+        this.voterPool = [];
+        this.poolIndex = 0;
     }
 }
 

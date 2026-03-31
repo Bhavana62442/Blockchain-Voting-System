@@ -1,45 +1,38 @@
 test:
   name: voting-benchmark
-  description: Large-scale evaluation of consortium blockchain voting system
+  description: Uniform 1000-transaction evaluation of blockchain voting system
 
   workers:
-    number: 10
+    number: 5
 
   rounds:
 
-    - label: RegisterVoter_Throughput
-      description: Bulk voter registration throughput test
-      txNumber: 100
+    - label: RegisterVoter
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
-          tps: 50
+          tps: 100
       workload:
         module: workload/registerVoter.js
+        arguments:
+          poolSize: 600
+          batchSize: 20
 
-    - label: CastVote_Throughput
-      description: Core voting throughput test
-      txNumber: 100
+    - label: CastVote   # ONLY voting test
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
-          tps: 50
+          tps: 100
       workload:
         module: workload/castVote.js
+        arguments:
+          poolSize: 600   # must be enough
+          batchSize: 20
 
-    - label: TallyVotes_Throughput
-      description: Read query throughput
-      txNumber: 100
-      rateControl:
-        type: fixed-rate
-        opts:
-          tps: 200
-      workload:
-        module: workload/tallyVotes.js
-
-    - label: QueryVoterStatus_Throughput
-      description: Voter status lookup throughput
-      txNumber: 100
+    - label: QueryVoterStatus
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
@@ -47,42 +40,29 @@ test:
       workload:
         module: workload/queryVoterStatus.js
 
-    - label: CastVote_Ramp_10
-      description: Scalability - 10 TPS
-      txNumber: 50
+    - label: TallyVotes
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
-          tps: 10
+          tps: 200
       workload:
-        module: workload/castVote.js
+        module: workload/tallyVotes.js
 
-    - label: CastVote_Ramp_25
-      description: Scalability - 25 TPS
-      txNumber: 50
+    - label: AuditTrail
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
-          tps: 25
+          tps: 250
       workload:
-        module: workload/castVote.js
+        module: workload/auditTrail.js
 
-    - label: CastVote_Ramp_50
-      description: Scalability - 50 TPS
-      txNumber: 50
+    - label: ResultConsistency
+      txNumber: 1000
       rateControl:
         type: fixed-rate
         opts:
-          tps: 50
+          tps: 250
       workload:
-        module: workload/castVote.js
-
-    - label: CastVote_Ramp_100
-      description: Scalability - 100 TPS
-      txNumber: 50
-      rateControl:
-        type: fixed-rate
-        opts:
-          tps: 100
-      workload:
-        module: workload/castVote.js
+        module: workload/resultConsistency.js
