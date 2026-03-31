@@ -23,8 +23,10 @@ class CastVoteWorkload extends WorkloadModuleBase {
             const batch = [];
 
             for (let j = 0; j < batchSize && (i + j) < poolSize; j++) {
-                const voterHashID = `${workerIndex}${crypto.randomBytes(28).toString('hex')}`;
-                const randomnessR  = crypto.randomBytes(32).toString('hex');
+
+                const voterHashID = crypto.randomBytes(32).toString('hex'); // ✅ FIXED
+                const randomnessR = crypto.randomBytes(32).toString('hex');
+
                 batch.push({ voterHashID, randomnessR });
             }
 
