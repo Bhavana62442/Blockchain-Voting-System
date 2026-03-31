@@ -56,7 +56,7 @@ test:
         opts:
           tps: 250
       workload:
-        module: workload/auditTrail.js
+        module: workload/audittrail.js
 
     - label: ResultConsistency
       txNumber: 1000
@@ -65,4 +65,4 @@ test:
         opts:
           tps: 250
       workload:
-        module: workload/resultConsistency.js
+        module: workload/resultconsistency.js
