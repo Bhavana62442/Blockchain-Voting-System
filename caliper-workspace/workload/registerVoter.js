@@ -5,8 +5,8 @@ const crypto = require('crypto');
 class RegisterVoterWorkload extends WorkloadModuleBase {
     async submitTransaction() {
         // Generate values guaranteed to be < N (use 30 bytes so always < 32-byte N)
-        const voterHashID = '00' + crypto.randomBytes(30).toString('hex');
-        const randomnessR  = '00' + crypto.randomBytes(30).toString('hex');
+        const voterHashID = crypto.randomBytes(32).toString('hex');  // 64 chars
+const randomnessR = crypto.randomBytes(32).toString('hex');  // 64 chars
 
         const request = {
             contractId: 'voting',
