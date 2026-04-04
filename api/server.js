@@ -1,19 +1,15 @@
-/**
- * api/server.js — Fabric Gateway API for National Voting System
- * Exposes REST endpoints consumed by the React frontend
- * Uses Fabric Gateway SDK (v1.x / fabric-gateway npm package)
- */
+require('dotenv').config();
 
 'use strict';
 
-const express      = require('express');
-const cors         = require('cors');
-const bodyParser   = require('body-parser');
+const express    = require('express');
+const cors       = require('cors');
+const bodyParser = require('body-parser');
 const { connect, hash, signers } = require('@hyperledger/fabric-gateway');
-const grpc         = require('@grpc/grpc-js');
-const crypto       = require('crypto');
-const fs           = require('fs');
-const path         = require('path');
+const grpc       = require('@grpc/grpc-js');
+const crypto     = require('crypto');
+const fs         = require('fs');
+const path       = require('path');
 
 const app = express();
 app.use(cors());
@@ -22,17 +18,18 @@ app.use(bodyParser.json());
 // ── Network config ────────────────────────────────────────────────────────────
 const CHANNEL   = 'nationalvotingchannel';
 const CHAINCODE = 'voting';
-const MSP_ID    = process.env.MSP_ID    || 'MaharashtraMSP';
-const STATE     = process.env.STATE     || 'maharashtra';
+const MSP_ID    = process.env.MSP_ID    || 'KarnatakaMSP';
+const STATE     = process.env.STATE     || 'karnataka';
+const CRYPTO_BASE = process.env.CRYPTO_BASE ||
+  path.resolve(__dirname, '../fabric-samples/test-network/organizations/peerOrganizations/karnataka.election.gov.in');
 
-const CRYPTO_BASE = path.resolve(__dirname,
-  `../network/organizations/peerOrganizations/${STATE}.election.gov.in`);
+const PEER_ENDPOINT = process.env.PEER_ENDPOINT || `peer0.${STATE}.election.gov.in:8051`;
+const PEER_HOST     = PEER_ENDPOINT.split(':')[0];
 
-const PEER_ENDPOINT  = process.env.PEER_ENDPOINT  || `peer0.${STATE}.election.gov.in:7051`;
-const PEER_HOST      = PEER_ENDPOINT.split(':')[0];
-const CERT_PATH      = path.join(CRYPTO_BASE, `users/Admin@${STATE}.election.gov.in/msp/signcerts/cert.pem`);
-const KEY_DIR        = path.join(CRYPTO_BASE, `users/Admin@${STATE}.election.gov.in/msp/keystore`);
-const TLS_CERT_PATH  = path.join(CRYPTO_BASE, `peers/peer0.${STATE}.election.gov.in/tls/ca.crt`);
+const CERT_FILES    = fs.readdirSync(path.join(CRYPTO_BASE, `users/Admin@${STATE}.election.gov.in/msp/signcerts`));
+const CERT_PATH     = path.join(CRYPTO_BASE, `users/Admin@${STATE}.election.gov.in/msp/signcerts`, CERT_FILES[0]);
+const KEY_DIR       = path.join(CRYPTO_BASE, `users/Admin@${STATE}.election.gov.in/msp/keystore`);
+const TLS_CERT_PATH = path.join(CRYPTO_BASE, `peers/peer0.${STATE}.election.gov.in/tls/ca.crt`);
 
 // ── Fabric Gateway connection ─────────────────────────────────────────────────
 let gateway, network, contract;
@@ -51,9 +48,9 @@ async function connectGateway() {
 
   gateway = connect({
     client,
-    identity:    { mspId: MSP_ID, credentials: Buffer.from(certPem) },
-    signer:      signers.newPrivateKeySigner(privateKey),
-    hash:        hash.sha256,
+    identity: { mspId: MSP_ID, credentials: Buffer.from(certPem) },
+    signer:   signers.newPrivateKeySigner(privateKey),
+    hash:     hash.sha256,
   });
 
   network  = gateway.getNetwork(CHANNEL);
@@ -61,7 +58,6 @@ async function connectGateway() {
   console.log(`✅  Connected to ${PEER_ENDPOINT} as ${MSP_ID}`);
 }
 
-// ── Helper: invoke with retry ─────────────────────────────────────────────────
 async function invokeCC(fn, ...args) {
   return contract.submitTransaction(fn, ...args);
 }
@@ -72,84 +68,25 @@ async function queryCC(fn, ...args) {
 // ── Routes ────────────────────────────────────────────────────────────────────
 
 /**
+ * GET /api/health
+ */
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', state: STATE, msp: MSP_ID, peer: PEER_ENDPOINT });
+});
+
+/**
  * POST /api/voter/register
- * Body: { voterID, salt, constituency }
- * Called by state CA-verified citizen portal
+ * Body: { voterHashID, randomness, mspID }
+ * Chaincode: RegisterVoter(hash, randomness, mspID)
  */
 app.post('/api/voter/register', async (req, res) => {
   try {
-    const { voterID, salt, constituency } = req.body;
-    if (!voterID || !salt || !constituency)
-      return res.status(400).json({ error: 'voterID, salt, constituency required' });
+    const { voterHashID, randomness, mspID } = req.body;
+    if (!voterHashID || !randomness || !mspID)
+      return res.status(400).json({ error: 'voterHashID, randomness, mspID required' });
 
-    const result = await invokeCC('RegisterVoter', voterID, salt, constituency);
-    res.json({ success: true, message: 'Voter registered', data: JSON.parse(result.toString()) });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-/**
- * POST /api/vote/cast
- * Body: { voterHashID, randomnessR, candidateID, constituency }
- */
-app.post('/api/vote/cast', async (req, res) => {
-  try {
-    const { voterHashID, randomnessR, candidateID, constituency } = req.body;
-    if (!voterHashID || !randomnessR || !candidateID || !constituency)
-      return res.status(400).json({ error: 'All vote fields required' });
-
-    const result = await invokeCC('CastVote', voterHashID, randomnessR, candidateID, constituency);
-    res.json({ success: true, voteReceipt: JSON.parse(result.toString()) });
-  } catch (e) {
-    const errMsg = e.message || '';
-    if (errMsg.includes('already voted'))
-      return res.status(409).json({ error: 'Voter has already cast a vote' });
-    res.status(500).json({ error: errMsg });
-  }
-});
-
-/**
- * POST /api/vote/correct  (Threshold Chameleon collision — correct invalid vote)
- * Body: { voteID, newCandidateID, secretShares: [...] }
- * Only callable by quorum of state officers holding TCH secret shares
- */
-app.post('/api/vote/correct', async (req, res) => {
-  try {
-    const { voteID, newCandidateID, secretShares } = req.body;
-    const result = await invokeCC(
-      'CorrectVote',
-      voteID,
-      newCandidateID,
-      JSON.stringify(secretShares)
-    );
-    res.json({ success: true, result: JSON.parse(result.toString()) });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-/**
- * GET /api/results/:constituency
- * Returns live tally for a constituency
- */
-app.get('/api/results/:constituency', async (req, res) => {
-  try {
-    const result = await queryCC('GetResults', req.params.constituency);
-    res.json(JSON.parse(result.toString()));
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-/**
- * GET /api/results/national
- * Returns aggregated national tally
- */
-app.get('/api/results/national', async (req, res) => {
-  try {
-    const result = await queryCC('GetNationalResults');
-    res.json(JSON.parse(result.toString()));
+    const result = await invokeCC('RegisterVoter', voterHashID, randomness, mspID);
+    res.json({ success: true, data: JSON.parse(Buffer.from(result).toString("utf8").trim()) });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -157,49 +94,95 @@ app.get('/api/results/national', async (req, res) => {
 
 /**
  * GET /api/voter/:voterHashID/status
- * Returns whether this hash has voted (does NOT reveal identity)
+ * Chaincode: QueryVoterStatus(hash)
  */
 app.get('/api/voter/:voterHashID/status', async (req, res) => {
   try {
-    const result = await queryCC('GetVoterStatus', req.params.voterHashID);
-    res.json(JSON.parse(result.toString()));
+    const result = await queryCC('QueryVoterStatus', req.params.voterHashID);
+    res.json(JSON.parse(Buffer.from(result).toString("utf8").trim()));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 /**
- * GET /api/election/status
- * Returns current election phase (REGISTRATION | VOTING | TALLYING | CLOSED)
+ * POST /api/vote/cast
+ * Body: { voterHashID, candidateID }
+ * Chaincode: CastVote(hash, candidateID)
  */
-app.get('/api/election/status', async (req, res) => {
+app.post('/api/vote/cast', async (req, res) => {
   try {
-    const result = await queryCC('GetElectionStatus');
-    res.json(JSON.parse(result.toString()));
+    const { voterHashID, candidateID } = req.body;
+    if (!voterHashID || !candidateID)
+      return res.status(400).json({ error: 'voterHashID and candidateID required' });
+
+    const result = await invokeCC('CastVote', voterHashID, candidateID);
+    const receipt = JSON.parse(Buffer.from(result).toString("utf8").trim());
+    res.json({ success: true, voteReceipt: receipt });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const msg = e.message || '';
+    if (msg.includes('already voted'))
+      return res.status(409).json({ error: 'You have already cast your vote.' });
+    res.status(500).json({ error: msg });
   }
 });
 
 /**
- * POST /api/election/phase  (ECI admin only)
- * Body: { phase: "VOTING" }
+ * GET /api/results
+ * Chaincode: TallyVotes() — returns { totalVotes, validVotes, perCandidate, perState, timestamp }
  */
-app.post('/api/election/phase', async (req, res) => {
+app.get('/api/results', async (req, res) => {
   try {
-    const { phase } = req.body;
-    await invokeCC('SetElectionPhase', phase);
-    res.json({ success: true, phase });
+    const result = await queryCC('TallyVotes');
+    res.json(JSON.parse(Buffer.from(result).toString("utf8").trim()));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Keep old route working too
+app.get('/api/results/:constituency', async (req, res) => {
+  try {
+    const result = await queryCC('TallyVotes');
+    res.json(JSON.parse(Buffer.from(result).toString("utf8").trim()));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
 /**
- * GET /api/health
+ * GET /api/audit/:voteID
+ * Chaincode: AuditVote(voteID)
  */
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', state: STATE, msp: MSP_ID, peer: PEER_ENDPOINT });
+app.get('/api/audit/:voteID', async (req, res) => {
+  try {
+    const result = await queryCC('AuditVote', req.params.voteID);
+    res.json(JSON.parse(Buffer.from(result).toString("utf8").trim()));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+/**
+ * POST /api/vote/correct
+ * Body: { voteID, newCandidateID, reason, authorizedBy, secretShares }
+ * Chaincode: CorrectVote(voteID, newCandidateID, reason, authorizedBy, sharesJSON)
+ */
+app.post('/api/vote/correct', async (req, res) => {
+  try {
+    const { voteID, newCandidateID, reason, authorizedBy, secretShares } = req.body;
+    const result = await invokeCC(
+      'CorrectVote',
+      voteID,
+      newCandidateID,
+      reason || '',
+      authorizedBy || '',
+      JSON.stringify(secretShares)
+    );
+    res.json({ success: true, result: JSON.parse(Buffer.from(result).toString("utf8").trim()) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

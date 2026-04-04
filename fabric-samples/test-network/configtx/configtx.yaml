@@ -130,7 +130,7 @@ Orderer: &OrdererDefaults
         Port: 7250
         ClientTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/tls/server.crt
         ServerTLSCert: ../organizations/ordererOrganizations/eci.election.gov.in/orderers/orderer2.eci.election.gov.in/tls/server.crt
-  BatchTimeout: 2s
+  BatchTimeout: 500ms
   BatchSize:
     MaxMessageCount: 500
     AbsoluteMaxBytes: 99 MB

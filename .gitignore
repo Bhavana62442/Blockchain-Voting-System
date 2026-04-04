@@ -89,3 +89,10 @@ fabric-samples/
 !fabric-samples/test-network/test_voting_e2e.sh
 fs.tar.gz
 Voting-UI/
+# Caliper results
+caliper-workspace/results/
+caliper-workspace/report.html
+caliper-workspace/node_modules/
+
+# Node modules
+node_modules/
