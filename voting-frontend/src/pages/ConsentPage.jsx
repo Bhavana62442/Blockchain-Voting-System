@@ -32,7 +32,7 @@ export default function ConsentPage() {
         .map(b => b.toString(16).padStart(2, "0")).join("");
 
       // ── GET TOKEN FROM MSP (port 8080) ──────────────────────
-      const mspRes = await fetch("http://localhost:8080/issue-token", {
+      const mspRes = await fetch("http://172.17.240.89:8080/issue-token", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ phone, blinded: blindedHash })
@@ -47,7 +47,7 @@ export default function ConsentPage() {
 
       // ── REGISTER ON BLOCKCHAIN (port 3001) ──────────────────
       try {
-        const regRes = await fetch("http://localhost:3001/api/voter/register", {
+        const regRes = await fetch("http://172.17.240.89:3001/api/voter/register", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: "http://172.17.240.89:3000/api",
 });
 
 export const submitVote = (data) => API.post("/votes", data);

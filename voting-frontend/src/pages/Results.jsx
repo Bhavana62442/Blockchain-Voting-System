@@ -174,7 +174,7 @@ export default function Results() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/api/results/Karnataka");
+      const res = await fetch("http://172.17.240.89:3001/api/results/Karnataka");
       if (res.ok) {
         const data = await res.json();
         setResults(data.perCandidate || {});

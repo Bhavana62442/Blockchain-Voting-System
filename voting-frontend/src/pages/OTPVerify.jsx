@@ -28,7 +28,7 @@ export default function OTPVerify() {
       setVerifying(true);
 
       // Verify OTP with auth-backend (port 3000)
-      const res  = await fetch("http://localhost:3000/auth/verify", {
+      const res  = await fetch("http://172.17.240.89:3000/auth/verify", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ phone, otp })

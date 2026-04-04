@@ -14,7 +14,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
-const API      = "http://localhost:3001";
+const API      = "http://172.17.240.89:3001";
 const ELIGIBLE = 1200;
 
 export default function AdminDashboard() {

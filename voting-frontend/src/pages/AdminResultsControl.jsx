@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:3001";
+const API = "http://172.17.240.89:3001";
 
 const CANDIDATE_NAMES = {
   "CANDIDATE_A": "Arjun Rao",

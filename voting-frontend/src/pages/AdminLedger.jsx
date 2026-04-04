@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import AdminSideMenu from "../components/AdminSideMenu";
 
-const API = "http://localhost:3001";
+const API = "http://172.17.240.89:3001";
 
 export default function AdminLedger() {
 

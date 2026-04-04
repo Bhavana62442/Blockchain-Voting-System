@@ -21,7 +21,7 @@ export default function DigiAuth() {
       setLoading(true);
 
       // auth-backend (port 3000) checks MongoDB DigiLocker simulation
-      const res  = await fetch("http://localhost:3000/auth/start", {
+      const res  = await fetch("http://172.17.240.89:3000/auth/start", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ phone: mobile, aadhaarLast4: aadhaar })

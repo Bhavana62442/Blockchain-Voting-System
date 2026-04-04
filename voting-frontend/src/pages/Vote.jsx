@@ -190,7 +190,7 @@ export default function Vote() {
       const randomnessR = localStorage.getItem("signature");
       const candidateID = CANDIDATES[selected].id;
 
-      const res = await fetch("http://localhost:3001/api/vote/cast", {
+      const res = await fetch("http://172.17.240.89:3001/api/vote/cast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voterHashID: token, candidateID })
