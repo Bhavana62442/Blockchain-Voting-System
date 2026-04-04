@@ -2,7 +2,11 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"math/big"
+	"math/rand"
 	"time"
 )
 
@@ -12,12 +16,11 @@ type Organization string
 const (
 	ECI    Organization = "ECI"
 	UIDAI  Organization = "UIDAI"
-	STATE1 Organization = "Karnataka"  // matches her KarnatakaMSP
+	STATE1 Organization = "Karnataka"
 	STATE2 Organization = "TamilNadu"
 	STATE3 Organization = "Maharashtra"
 )
 
-// Hierarchy map — only states under ECI can issue tokens
 var stateAuthority = map[Organization]Organization{
 	STATE1: ECI,
 	STATE2: ECI,
@@ -43,32 +46,75 @@ type Token struct {
 	Used      bool
 }
 
+// ── TCH PUBLIC KEY ────────────────────────────────────────────
+// Loaded from tch-keys.env at startup via main.go
+// These are the REAL keys stored on-chain — hashes must use them
+type TCHPublicKey struct {
+	N *big.Int
+	E *big.Int
+}
+
+var tchPK *TCHPublicKey // set by main.go on startup
+
 // ── STORAGE ───────────────────────────────────────────────────
 var voters     = make(map[string]Voter)
 var tokenStore = make(map[string]Token)
 
-// ── HELPERS ───────────────────────────────────────────────────
+// ── CHAMELEON HASH ────────────────────────────────────────────
+// Computes H = (SHA256(message) mod N + r^e mod N) mod N
+// r is random in [0, N) — same math as chaincode's computeHash()
+// Returns voterHashID (H hex) and randomnessR (r hex)
+func chameleonHash(pk *TCHPublicKey, message string) (string, string, error) {
+	if pk == nil {
+		return "", "", errors.New("TCH public key not loaded")
+	}
 
-func generateToken(voterID string) string {
-	data := voterID + time.Now().String()
-	hash := sha256.Sum256([]byte(data))
-	return fmt.Sprintf("%x", hash)
+	// Random r in [0, N)
+	// Use crypto/rand for production; here we use seeded math/rand for simplicity
+	// but still produce a value < N
+	nBytes := pk.N.Bytes()
+	rBytes := make([]byte, len(nBytes))
+
+	src := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for {
+		for i := range rBytes {
+			rBytes[i] = byte(src.Intn(256))
+		}
+		r := new(big.Int).SetBytes(rBytes)
+		if r.Cmp(pk.N) < 0 && r.Sign() > 0 {
+			// Compute SHA256(message) mod N
+			sum := sha256.Sum256([]byte(message))
+			mHash := new(big.Int).SetBytes(sum[:])
+			mHash.Mod(mHash, pk.N)
+
+			// Compute r^e mod N
+			re := new(big.Int).Exp(r, pk.E, pk.N)
+
+			// H = (mHash + re) mod N
+			h := new(big.Int).Add(mHash, re)
+			h.Mod(h, pk.N)
+
+			return hex.EncodeToString(h.Bytes()),
+				hex.EncodeToString(r.Bytes()),
+				nil
+		}
+	}
 }
 
-// signBlinded signs the BLINDED value — MSP never sees the actual vote
-// This is the blind signature concept: voter blinds their data,
-// MSP signs it, voter unblinds → MSP signature on original data
-// The signed token becomes voterHashID in her chaincode
-func signBlinded(blinded string) string {
-	hash := sha256.Sum256([]byte(blinded + "MSP_KARNATAKA_SECRET"))
-	return fmt.Sprintf("%x", hash)
+// ── HELPERS ───────────────────────────────────────────────────
+
+func generateVoterMessage(phone string, salt string) string {
+	// message format matches what the chaincode will verify
+	return phone + "|" + salt
+}
+
+func makeSalt(phone string) string {
+	sum := sha256.Sum256([]byte(phone + time.Now().String()))
+	return hex.EncodeToString(sum[:16])
 }
 
 // ── HIERARCHICAL MSP FUNCTIONS ────────────────────────────────
 
-// registerVoter — ONLY ECI root authority can register
-// Validates state is under ECI hierarchy
-// Idempotent — safe to call multiple times
 func registerVoter(user User, voterID string, state Organization) error {
 	if user.Org != ECI {
 		return fmt.Errorf("only ECI can register voters")
@@ -78,7 +124,7 @@ func registerVoter(user User, voterID string, state Organization) error {
 		return fmt.Errorf("state %s not in ECI hierarchy", state)
 	}
 	if _, exists := voters[voterID]; exists {
-		return nil // already registered, skip
+		return nil
 	}
 	voters[voterID] = Voter{
 		VoterID:    voterID,
@@ -90,7 +136,6 @@ func registerVoter(user User, voterID string, state Organization) error {
 	return nil
 }
 
-// verifyVoter — ONLY UIDAI can verify voter identity
 func verifyVoter(user User, voterID string) error {
 	if user.Org != UIDAI {
 		return fmt.Errorf("only UIDAI can verify voter identity")
@@ -105,13 +150,11 @@ func verifyVoter(user User, voterID string) error {
 	return nil
 }
 
-// issueVotingToken — ONLY authorized state under ECI can issue
-// Uses blind signature: signs blinded hash, not actual vote
+// issueVotingToken — generates a REAL chameleon hash using TCH public key
 // Returns:
-//   token     → becomes voterHashID in her RegisterVoter + CastVote chaincode calls
-//   signature → becomes randomnessR in her RegisterVoter chaincode call
+//   token     → voterHashID  (H from chameleon hash) — used in RegisterVoter + CastVote
+//   signature → randomnessR  (r from chameleon hash) — used in RegisterVoter
 func issueVotingToken(user User, voterID string, blinded string) (string, string, error) {
-	// Enforce hierarchy
 	parent, ok := stateAuthority[user.Org]
 	if !ok || parent != ECI {
 		return "", "", fmt.Errorf("state %s not authorized under ECI hierarchy", user.Org)
@@ -131,18 +174,28 @@ func issueVotingToken(user User, voterID string, blinded string) (string, string
 		return "", "", fmt.Errorf("voter already voted")
 	}
 
-	// token = voterHashID (unique anonymous identity for her chaincode)
-	token := generateToken(voterID)
-	// signature = randomnessR (used in her chameleon hash verification)
-	signature := signBlinded(blinded)
+	// Use chameleon hash with real TCH keys — produces values the chaincode accepts
+	salt := makeSalt(voterID)
+	message := generateVoterMessage(voterID, salt)
 
-	tokenStore[token] = Token{Value: token, Signature: signature, Used: false}
-	fmt.Printf("[MSP %s] Issued token (voterHashID) for voter\n", user.Org)
-	return token, signature, nil
+	voterHashID, randomnessR, err := chameleonHash(tchPK, message)
+	if err != nil {
+		return "", "", fmt.Errorf("chameleon hash failed: %w", err)
+	}
+
+	tokenStore[voterHashID] = Token{
+		Value:     voterHashID,
+		Signature: randomnessR,
+		Used:      false,
+	}
+
+	fmt.Printf("[MSP %s] Issued chameleon token for voter ✅\n", user.Org)
+	fmt.Printf("  voterHashID : %s...\n", voterHashID[:16])
+	fmt.Printf("  randomnessR : %s...\n", randomnessR[:16])
+
+	return voterHashID, randomnessR, nil
 }
 
-// useToken — marks token used (frontend duplicate guard)
-// Real duplicate prevention happens in her chaincode via voter status (REGISTERED→VOTED)
 func useToken(token string) error {
 	t, exists := tokenStore[token]
 	if !exists {
