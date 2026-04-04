@@ -34,4 +34,4 @@ Thumbs.db
 go.sum
 
 # Misc
-*.log
+*.logmsp-blind-signature/.env
