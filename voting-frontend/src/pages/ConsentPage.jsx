@@ -45,26 +45,25 @@ export default function ConsentPage() {
 
       const { token, signature } = await mspRes.json();
 
-      // ── REGISTER ON BLOCKCHAIN (her API port 3001) ──────────
-      // Skipped gracefully if her network not running yet
+      // ── REGISTER ON BLOCKCHAIN (port 3001) ──────────────────
       try {
         const regRes = await fetch("http://localhost:3001/api/voter/register", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({
-            voterID:      token,
-            salt:         signature,
-            constituency: "Karnataka"
+            voterHashID: token,          // ← fixed
+            randomness:  signature,      // ← fixed
+            mspID:       "KarnatakaMSP" // ← fixed
           })
         });
-        if (!regRes.ok) {
-          const txt = await regRes.text();
-          if (!txt.includes("already registered")) {
-            console.warn("Blockchain register warning:", txt);
-          }
+        const regData = await regRes.json();
+        if (!regRes.ok && !regData.error?.includes("already registered")) {
+          console.warn("Blockchain register warning:", JSON.stringify(regData));
+        } else {
+          console.log("✅ Voter registered on blockchain");
         }
-      } catch {
-        console.warn("Blockchain API not running yet — skipping register");
+      } catch (regErr) {
+        console.warn("Blockchain API not running — skipping register:", regErr.message);
       }
 
       // ── STORE FOR VOTE PAGE ─────────────────────────────────
@@ -111,17 +110,14 @@ export default function ConsentPage() {
         {/* ISSUED DOCUMENTS */}
         <div style={{ borderTop: "1px solid #eee", paddingTop: "20px" }}>
           <h3 style={{ marginBottom: "12px" }}>Issued Documents</h3>
-
           <label style={{ display: "block", marginBottom: "8px" }}>
             <input type="checkbox" checked={aadhaar} onChange={() => setAadhaar(!aadhaar)} />{" "}
             Aadhaar Verification (XXXX 3325)
           </label>
-
           <label style={{ display: "block", marginBottom: "8px" }}>
             <input type="checkbox" checked={voterId} onChange={() => setVoterId(!voterId)} />{" "}
             Voter ID Authentication (XXXX 6789)
           </label>
-
           <label style={{ display: "block" }}>
             <input type="checkbox" checked={dl} onChange={() => setDl(!dl)} />{" "}
             Driving License (can be accessed)
@@ -146,18 +142,15 @@ export default function ConsentPage() {
           <p style={{ color: "#555" }}>Identity verification for Secure Electronic Voting System</p>
         </div>
 
-        {/* CONSENT TEXT */}
         <p style={{ marginTop: "30px", fontSize: "14px", color: "#555" }}>
           By clicking <strong>Allow</strong>, you consent to share the selected
           information with the voting portal for identity verification.
         </p>
 
-        {/* ERROR */}
         {error && (
           <p style={{ color: "red", fontSize: "13px", marginTop: "10px" }}>{error}</p>
         )}
 
-        {/* BUTTONS — properly aligned */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
@@ -165,18 +158,11 @@ export default function ConsentPage() {
           marginTop: "25px",
           gap: "12px"
         }}>
-
           <button
             style={{
-              padding: "12px 28px",
-              border: "1px solid #4a64f0",
-              borderRadius: "8px",
-              background: "#ffffff",
-              color: "#4a64f0",
-              fontWeight: "600",
-              cursor: "pointer",
-              fontSize: "15px",
-              flex: "0 0 auto"
+              padding: "12px 28px", border: "1px solid #4a64f0", borderRadius: "8px",
+              background: "#ffffff", color: "#4a64f0", fontWeight: "600",
+              cursor: "pointer", fontSize: "15px", flex: "0 0 auto"
             }}
             onClick={() => navigate("/")}
           >
@@ -185,22 +171,16 @@ export default function ConsentPage() {
 
           <button
             style={{
-              padding: "12px 28px",
-              border: "none",
-              borderRadius: "8px",
-              background: loading ? "#a0a0a0" : "#4a64f0",
-              color: "#ffffff",
-              fontWeight: "600",
-              cursor: loading ? "not-allowed" : "pointer",
-              fontSize: "15px",
-              flex: "0 0 auto"
+              padding: "12px 28px", border: "none", borderRadius: "8px",
+              background: loading ? "#a0a0a0" : "#4a64f0", color: "#ffffff",
+              fontWeight: "600", cursor: loading ? "not-allowed" : "pointer",
+              fontSize: "15px", flex: "0 0 auto"
             }}
             onClick={handleAllow}
             disabled={loading}
           >
             {loading ? "Processing..." : "Allow"}
           </button>
-
         </div>
 
       </div>
