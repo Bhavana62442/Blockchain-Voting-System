@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SideMenu from "../components/SideMenu";
+import SideMenu from "./voting-frontend/src/components/SideMenu";
 
 const banners = [
   "/images/parliament1.jpg",
