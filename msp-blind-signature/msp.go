@@ -94,9 +94,10 @@ func chameleonHash(pk *TCHPublicKey, message string) (string, string, error) {
 			h := new(big.Int).Add(mHash, re)
 			h.Mod(h, pk.N)
 
-			return hex.EncodeToString(h.Bytes()),
-				hex.EncodeToString(r.Bytes()),
-				nil
+			nLen := len(pk.N.Bytes())
+			hHex := fmt.Sprintf("%0*x", nLen*2, h)
+			rHex := fmt.Sprintf("%0*x", nLen*2, r)
+			return hHex, rHex, nil
 		}
 	}
 }

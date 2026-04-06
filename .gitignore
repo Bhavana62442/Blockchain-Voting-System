@@ -35,3 +35,37 @@ go.sum
 
 # Misc
 *.logmsp-blind-signature/.env
+
+# Caliper benchmark results
+caliper-workspace/results/
+caliper-workspace/*.log
+
+# Fabric binaries
+bin/
+fabric-samples/peer
+fabric-samples/orderer
+fabric-samples/configtxgen
+fabric-samples/configtxlator
+fabric-samples/cryptogen
+fabric-samples/discover
+fabric-samples/fabric-ca-client
+fabric-samples/fabric-ca-server
+fabric-samples/ledgerutil
+fabric-samples/osnadmin
+fabric-samples/config/
+fabric-samples/organizations/
+fabric-samples/test-network/organizations/
+fabric-samples/test-network/compose/organizations/
+fabric-samples/test-network/configtx/organizations/
+fabric-samples/test-network/network/
+fabric-samples/test-network/ordererOrganizations/
+fabric-samples/test-network/peerOrganizations/
+fabric-samples/test-network/tch-keys.env
+
+# Archives
+*.tar.gz
+*.zip
+
+# Generated crypto material
+organizations/
+config/

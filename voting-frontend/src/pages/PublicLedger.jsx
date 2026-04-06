@@ -138,7 +138,7 @@ export default function PublicLedger() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://172.17.240.89:3001/api/results/Karnataka");
+      const res = await fetch("http://localhost:4000/api/results/Karnataka");
       if (res.ok) {
         const data = await res.json();
         const rows = [];
